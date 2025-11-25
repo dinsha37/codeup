@@ -1,4 +1,8 @@
+import 'package:codeup/features/auth/view/certificates_screen.dart';
+import 'package:codeup/features/auth/view/freelance_screen.dart';
+import 'package:codeup/features/auth/view/level_screen.dart';
 import 'package:codeup/features/auth/view/profile_screen.dart';
+import 'package:codeup/features/auth/view/settings_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -15,10 +19,10 @@ class _BottomnavScreenState extends State<BottomnavScreen> {
   int selectedindex = 0;
   List pages = [
     HomeScreen(),
-    HomeScreen(),
-    ProfileScreen(),
-    ProfileScreen(),
-    ProfileScreen(),
+    LevelScreen(),
+    CertificatesScreen(),
+    FreelanceScreen(),
+    SettingsScreen(),
   ];
   @override
   Widget build(BuildContext context) {
@@ -46,19 +50,19 @@ class _BottomnavScreenState extends State<BottomnavScreen> {
             label: 'Levels',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.badge_outlined),
             activeIcon: Icon(Icons.badge),
             label: 'Certificates',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.work_outlined),
+            activeIcon: Icon(Icons.work),
+            label: 'freelance',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'settings',
           ),
         ],
       ),

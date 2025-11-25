@@ -14,21 +14,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue,
         title: const Text(
           'My Profile',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white70),
-            onPressed: () {
-              // Action: Navigate to Settings
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -47,26 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // 3. Featured Certificates Section
               const CertificatesSection(),
               const SizedBox(height: 30),
-
-              // 4. Action Button: View Full Analytics
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Action: Navigate to Performance Analytics Module
-                },
-                icon: const Icon(Icons.analytics_outlined, size: 24),
-                label: const Text(
-                  'View Full Performance Analytics',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -90,20 +63,19 @@ class UserHeader extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.limeAccent, width: 3),
+            border: Border.all(color: Colors.blue, width: 3),
             boxShadow: [
               BoxShadow(
-                color: Colors.limeAccent.withOpacity(0.4),
+                color: Colors.green.withOpacity(0.4),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
             ],
           ),
           child: const CircleAvatar(
-            radius: 50,
-            backgroundColor: Color(
-              0xFF303030,
-            ), // Dark grey background for image
+            radius: 40,
+            backgroundColor: Color.fromARGB(196, 98, 159, 228),
+
             child: Icon(Icons.person_rounded, size: 60, color: Colors.white70),
           ),
         ),
@@ -112,8 +84,8 @@ class UserHeader extends StatelessWidget {
         const Text(
           'Sarah K.',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
+            color: Colors.black,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -122,14 +94,14 @@ class UserHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.orangeAccent.withOpacity(0.2),
+            color: Colors.white.withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.orangeAccent, width: 1),
+            border: Border.all(color: Colors.blue, width: 1),
           ),
           child: const Text(
             'Current Level: MEDIUM',
             style: TextStyle(
-              color: Colors.orangeAccent,
+              color: Colors.blue,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -150,9 +122,9 @@ class PerformanceMetricsGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 3,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 0.9,
+      crossAxisSpacing: 15,
+      mainAxisSpacing: 15,
+      childAspectRatio: 0.8,
       children: const [
         MetricCard(
           value: '45',
@@ -164,13 +136,13 @@ class PerformanceMetricsGrid extends StatelessWidget {
           value: '82%',
           label: 'Average Accuracy',
           icon: Icons.speed_outlined,
-          color: Colors.limeAccent,
+          color: Colors.deepOrangeAccent,
         ),
         MetricCard(
           value: '12h',
           label: 'Total Study Time',
           icon: Icons.access_time_outlined,
-          color: Colors.white,
+          color: Colors.deepPurpleAccent,
         ),
       ],
     );
@@ -197,9 +169,9 @@ class MetricCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.blue.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.blue.withOpacity(0.1), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -211,15 +183,15 @@ class MetricCard extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontSize: 24,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.normal,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
-            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.black, fontSize: 10),
+            overflow: TextOverflow.visible,
             maxLines: 2,
           ),
         ],
@@ -237,7 +209,7 @@ class CertificatesSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.blue.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -246,19 +218,19 @@ class CertificatesSection extends StatelessWidget {
           const Text(
             'Your Certifications',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const Divider(color: Colors.white24),
+          const Divider(color: Colors.black),
           const SizedBox(height: 10),
 
           // Certificate Item Example
           const CertificateItem(
             title: 'Basic Level Completion',
             date: 'Issued: July 2025',
-            color: CupertinoColors.activeGreen,
+            color: Colors.blueAccent,
           ),
           const SizedBox(height: 12),
 
@@ -266,27 +238,10 @@ class CertificatesSection extends StatelessWidget {
           const CertificateItem(
             title: 'Medium Level Certificate',
             date: 'Status: In Progress',
-            color: Colors.white30,
+            color: Colors.blueAccent,
           ),
 
           const SizedBox(height: 20),
-          TextButton.icon(
-            onPressed: () {
-              // Action: Navigate to the full Certificate Module
-            },
-            icon: const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.limeAccent,
-            ),
-            label: const Text(
-              'Manage & Share Certificates',
-              style: TextStyle(
-                color: Colors.limeAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -325,7 +280,7 @@ class CertificateItem extends StatelessWidget {
             ),
             Text(
               date,
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              style: const TextStyle(color: Colors.black, fontSize: 14),
             ),
           ],
         ),

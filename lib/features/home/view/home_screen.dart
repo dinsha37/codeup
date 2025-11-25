@@ -1,3 +1,7 @@
+import 'package:codeup/features/auth/view/certificates_screen.dart';
+import 'package:codeup/features/auth/view/profile_screen.dart';
+import 'package:codeup/features/auth/view/settings_screen.dart';
+import 'package:codeup/features/home/view/codingfocus_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -56,12 +60,23 @@ class CodeUpHeader extends StatelessWidget {
             ),
           ],
         ),
-        const CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.blueAccent,
-          child: Text(
-            'S',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+          },
+          child: const CircleAvatar(
+            radius: 16,
+            backgroundColor: Colors.blueAccent,
+            child: Text(
+              'S',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ],
@@ -151,11 +166,19 @@ class FeatureGrid extends StatelessWidget {
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
       childAspectRatio: 0.85,
-      children: const [
+      children: [
         FeatureCard(
           icon: Icons.emoji_events_outlined,
           label: 'Certificates',
           iconColor: Colors.blueAccent,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CertificatesScreen(),
+              ),
+            );
+          },
         ),
         FeatureCard(
           icon: Icons.bar_chart_rounded,
@@ -166,6 +189,14 @@ class FeatureGrid extends StatelessWidget {
           icon: Icons.code,
           label: 'Coding Focus',
           iconColor: Colors.lightGreen,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CodingfocusScreen(),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -177,20 +208,20 @@ class FeatureCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color iconColor;
+  final VoidCallback? onTap;
 
   const FeatureCard({
     required this.icon,
     required this.label,
     required this.iconColor,
+    this.onTap,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        // Handle navigation to specific module (e.g., Certificate Module)
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -214,5 +245,3 @@ class FeatureCard extends StatelessWidget {
     );
   }
 }
-
-
