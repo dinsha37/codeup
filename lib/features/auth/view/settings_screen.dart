@@ -1,4 +1,7 @@
 import 'package:codeup/features/auth/view/information_screen.dart';
+import 'package:codeup/features/auth/view/privacypolicy_screen.dart';
+import 'package:codeup/features/auth/view/terms_screen.dart';
+import 'package:codeup/features/auth/view/feedback_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -212,8 +215,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSectionHeader('Support'),
             _buildNavigationTile(
               icon: Icons.bug_report_outlined,
-              title: 'Report a Problem',
+              title: 'Help & Feedback',
               onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FeedbackScreen(),
+                  ),
+                );
                 /* Navigate to Report Screen */
               },
             ),
@@ -224,6 +233,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.description_outlined,
               title: 'Terms of Service',
               onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TermsScreen()),
+                );
                 /* Open Terms of Service */
               },
             ),
@@ -231,6 +244,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.privacy_tip_outlined,
               title: 'Privacy Policy',
               onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacypolicyScreen(),
+                  ),
+                );
+
                 /* Open Privacy Policy */
               },
             ),

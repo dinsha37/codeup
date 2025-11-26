@@ -1,7 +1,9 @@
 import 'package:codeup/features/auth/view/certificates_screen.dart';
+import 'package:codeup/features/auth/view/level_screen.dart';
 import 'package:codeup/features/auth/view/profile_screen.dart';
 import 'package:codeup/features/auth/view/settings_screen.dart';
 import 'package:codeup/features/home/view/codingfocus_screen.dart';
+import 'package:codeup/features/home/view/analytics_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -131,6 +133,10 @@ class StatusCard extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LevelScreen()),
+              );
               // Action: Leads to solving challenges and progression
             },
             icon: const Icon(Icons.arrow_forward),
@@ -184,6 +190,12 @@ class FeatureGrid extends StatelessWidget {
           icon: Icons.bar_chart_rounded,
           label: 'Analytics',
           iconColor: Colors.orangeAccent,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+            );
+          },
         ),
         FeatureCard(
           icon: Icons.code,

@@ -10,9 +10,9 @@ class LevelScreen extends StatefulWidget {
 
   // Data structure for the levels
   final List<Map<String, dynamic>> levels = const [
-    {'levelNumber': 1, 'questionCount': 10},
-    {'levelNumber': 2, 'questionCount': 10},
-    {'levelNumber': 3, 'questionCount': 10},
+    {'levelNumber': 1, 'questionCount': 5},
+    {'levelNumber': 2, 'questionCount': 5},
+    {'levelNumber': 3, 'questionCount': 5},
   ];
 }
 

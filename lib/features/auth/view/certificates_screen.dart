@@ -27,13 +27,6 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        // Using an actual back button for navigation
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () {
-            // Navigator.pop(context); // Actual navigation back
-          },
-        ),
         title: const Text(
           'Certificates',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
