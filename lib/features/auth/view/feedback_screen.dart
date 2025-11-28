@@ -9,21 +9,18 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
-final TextEditingController feedbackController = TextEditingController();
+  final TextEditingController feedbackController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
         centerTitle: true,
         title: const Text(
           "Help & Feedback",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
@@ -36,14 +33,10 @@ final TextEditingController feedbackController = TextEditingController();
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // --- Help Section ---
             const Text(
               "Help Topics",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
@@ -73,10 +66,7 @@ final TextEditingController feedbackController = TextEditingController();
             // --- Feedback Section ---
             const Text(
               "Send Feedback",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
 
@@ -109,7 +99,9 @@ final TextEditingController feedbackController = TextEditingController();
                   // You can send this feedback to Firebase / API
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Thanks! Your feedback has been submitted."),
+                      content: Text(
+                        "Thanks! Your feedback has been submitted.",
+                      ),
                     ),
                   );
 
@@ -124,10 +116,7 @@ final TextEditingController feedbackController = TextEditingController();
                 ),
                 child: const Text(
                   "Submit",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
             ),
@@ -137,7 +126,11 @@ final TextEditingController feedbackController = TextEditingController();
     );
   }
 
-  Widget _buildHelpTile({required IconData icon, required String title, required String content}) {
+  Widget _buildHelpTile({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
     return Card(
       elevation: 0.4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -155,7 +148,7 @@ final TextEditingController feedbackController = TextEditingController();
               content,
               style: const TextStyle(fontSize: 14, height: 1.4),
             ),
-          )
+          ),
         ],
       ),
     );
