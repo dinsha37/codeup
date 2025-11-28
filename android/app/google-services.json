@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "144296871168",
+    "project_id": "codeup-d9e2a",
+    "storage_bucket": "codeup-d9e2a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144296871168:android:f3c104d250cb6947855fe5",
+        "android_client_info": {
+          "package_name": "com.example.codeup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaXWiP6NWDYHMgcJAALUmDUbYx8PaaKj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
