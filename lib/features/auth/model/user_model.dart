@@ -26,7 +26,7 @@ class UserModel {
     });
 
     factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        createdAt: json["createdAt"] == null ? null : CreatedAt.fromJson(json["createdAt"]),
+       
         uid: json["uid"],
         password: json["password"],
         name: json["name"],

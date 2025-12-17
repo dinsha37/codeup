@@ -1,54 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:codeup/features/auth/view/login_screen.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Admin Dashboard',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const AdminDashboard(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class User {
-  final int id;
-  String name;
-  String email;
-  String role;
-  String status;
-
-  User({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.role,
-    required this.status,
-  });
-}
-
-class SubLevel {
-  final int id;
-  final String name;
-  final List<String> questions;
-
-  SubLevel({required this.id, required this.name, required this.questions});
-}
-
-class Level {
-  final int id;
-  final String name;
-  final List<SubLevel> subLevels;
-
-  Level({required this.id, required this.name, required this.subLevels});
-}
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -59,318 +12,195 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   String activeTab = 'dashboard';
-
-  List<User> users = [
-    User(
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'student',
-      status: 'active',
-    ),
-    User(
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'teacher',
-      status: 'active',
-    ),
-  ];
-
-  final List<Level> levels = [
-    Level(
-      id: 1,
-      name: 'Level 1',
-      subLevels: [
-        SubLevel(
-          id: 1,
-          name: 'Sub 1.1',
-          questions: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
-        ),
-        SubLevel(
-          id: 2,
-          name: 'Sub 1.2',
-          questions: ['Q6', 'Q7', 'Q8', 'Q9', 'Q10'],
-        ),
-        SubLevel(
-          id: 3,
-          name: 'Sub 1.3',
-          questions: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15'],
-        ),
-      ],
-    ),
-    Level(
-      id: 2,
-      name: 'Level 2',
-      subLevels: [
-        SubLevel(
-          id: 4,
-          name: 'Sub 2.1',
-          questions: ['Q16', 'Q17', 'Q18', 'Q19', 'Q20'],
-        ),
-        SubLevel(
-          id: 5,
-          name: 'Sub 2.2',
-          questions: ['Q21', 'Q22', 'Q23', 'Q24', 'Q25'],
-        ),
-        SubLevel(
-          id: 6,
-          name: 'Sub 2.3',
-          questions: ['Q26', 'Q27', 'Q28', 'Q29', 'Q30'],
-        ),
-      ],
-    ),
-    Level(
-      id: 3,
-      name: 'Level 3',
-      subLevels: [
-        SubLevel(
-          id: 7,
-          name: 'Sub 3.1',
-          questions: ['Q31', 'Q32', 'Q33', 'Q34', 'Q35'],
-        ),
-        SubLevel(
-          id: 8,
-          name: 'Sub 3.2',
-          questions: ['Q36', 'Q37', 'Q38', 'Q39', 'Q40'],
-        ),
-        SubLevel(
-          id: 9,
-          name: 'Sub 3.3',
-          questions: ['Q41', 'Q42', 'Q43', 'Q44', 'Q45'],
-        ),
-      ],
-    ),
-  ];
-
-  int get totalQuestions {
-    return levels.fold(
-      0,
-      (sum, level) =>
-          sum +
-          level.subLevels.fold(
-            0,
-            (subSum, subLevel) => subSum + subLevel.questions.length,
-          ),
-    );
-  }
-
-  void openUserModal({User? user}) {
-    showDialog(
-      context: context,
-      builder: (context) => UserModal(
-        user: user,
-        onSave: (name, email, role) {
-          setState(() {
-            if (user != null) {
-              user.name = name;
-              user.email = email;
-              user.role = role;
-            } else {
-              users.add(
-                User(
-                  id: DateTime.now().millisecondsSinceEpoch,
-                  name: name,
-                  email: email,
-                  role: role,
-                  status: 'active',
-                ),
-              );
-            }
-          });
-        },
-      ),
-    );
-  }
-
-  void deleteUser(int id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
-        content: const Text('Are you sure you want to delete this user?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                users.removeWhere((u) => u.id == id);
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
+  final stats = <String, int>{};
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          // Sidebar
-          Container(
-            width: 250,
-            color: const Color(0xFF1F2937),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Text(
-                    'Admin Panel',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildNavButton('dashboard', Icons.bar_chart, 'Dashboard'),
-                _buildNavButton('users', Icons.people, 'Users'),
-                _buildNavButton('levels', Icons.book, 'Levels'),
-              ],
-            ),
-          ),
-
-          // Main Content
-          Expanded(
-            child: Column(
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        activeTab[0].toUpperCase() + activeTab.substring(1),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content
-                Expanded(
-                  child: Container(
-                    color: const Color(0xFFF3F4F6),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: _buildContent(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadStats();
   }
 
-  Widget _buildNavButton(String tab, IconData icon, String label) {
-    final isActive = activeTab == tab;
-    return InkWell(
-      onTap: () => setState(() => activeTab = tab),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.blue : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
+  Future<void> _loadStats() async {
+    final snapshot = await FirebaseFirestore.instance.collection('Users').get();
+    if (mounted) {
+      setState(() {
+        stats['total'] = snapshot.docs.length;
+        stats['active'] = snapshot.docs.where((d) => d['status'] == 1).length;
+        stats['blocked'] = snapshot.docs.where((d) => d['status'] == 0).length;
+      });
+    }
+  }
+
+  Future<void> _logout() async {
+    final bool? confirm = await showModalBottomSheet<bool>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "Confirm Logout",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "Are you sure you want to sign out of the Admin Panel?",
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
 
-  Widget _buildContent() {
-    switch (activeTab) {
-      case 'dashboard':
-        return _buildDashboard();
-      case 'users':
-        return _buildUsers();
-      case 'levels':
-        return _buildLevels();
-      default:
-        return const SizedBox();
+    if (confirm == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (_) => false,
+        );
+      }
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF8F9FD),
+      drawer: _buildMobileDrawer(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.notes_rounded, color: Colors.black, size: 28),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        title: Text(
+          activeTab == 'dashboard' ? "Admin Hub" : "User Management",
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: _loadStats,
+            icon: const Icon(Icons.refresh, color: Colors.indigo),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: activeTab == 'dashboard'
+              ? _buildDashboard()
+              : _buildUserList(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDashboard() {
-    return GridView.count(
-      crossAxisCount: 4,
-      crossAxisSpacing: 24,
-      mainAxisSpacing: 24,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatCard(
-          'Total Users',
-          users.length.toString(),
-          Icons.people,
-          Colors.blue,
+        const Text(
+          "Statistics Overview",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        _buildStatCard(
-          'Levels',
-          levels.length.toString(),
-          Icons.book,
-          Colors.green,
-        ),
-        _buildStatCard('Sub-levels', '9', Icons.library_books, Colors.purple),
-        _buildStatCard(
-          'Questions',
-          totalQuestions.toString(),
-          Icons.quiz,
-          Colors.orange,
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.1,
+          children: [
+            _statTile("Total Users", stats['total'], Icons.people, Colors.blue),
+            _statTile(
+              "Active",
+              stats['active'],
+              Icons.verified_user,
+              Colors.green,
+            ),
+            _statTile(
+              "Blocked",
+              stats['blocked'],
+              Icons.block,
+              Colors.redAccent,
+            ),
+            _statTile("Pending", 0, Icons.hourglass_top, Colors.orange),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _statTile(String label, int? val, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: color.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -378,29 +208,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+              Text(
+                '${val ?? 0}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              Icon(icon, size: 40, color: color),
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
             ],
           ),
         ],
@@ -408,324 +233,74 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildUsers() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ElevatedButton.icon(
-          onPressed: () => openUserModal(),
-          icon: const Icon(Icons.add),
-          label: const Text('Add User'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
+  Widget _buildMobileDrawer() {
+    return Drawer(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4),
-            ],
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: MaterialStateProperty.all(
-                const Color(0xFFF9FAFB),
+      ),
+      child: Column(
+        children: [
+          const UserAccountsDrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF1A1F3D)),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.indigoAccent,
+              child: Icon(
+                Icons.admin_panel_settings,
+                color: Colors.white,
+                size: 32,
               ),
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    'NAME',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'EMAIL',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'ROLE',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'ACTIONS',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-              rows: users.map((user) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(user.name)),
-                    DataCell(Text(user.email)),
-                    DataCell(_buildRoleBadge(user.role)),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.edit,
-                              size: 18,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () => openUserModal(user: user),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              size: 18,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => deleteUser(user.id),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
             ),
+            accountName: Text(
+              "System Admin",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            accountEmail: Text("admin@codeup.com"),
           ),
-        ),
-      ],
+          _drawerItem(Icons.grid_view_rounded, "Dashboard", "dashboard"),
+          _drawerItem(Icons.people_alt_rounded, "User Management", "users"),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+            title: const Text(
+              "Logout",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onTap: _logout,
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
-  Widget _buildRoleBadge(String role) {
-    Color bgColor;
-    Color textColor;
-
-    switch (role) {
-      case 'admin':
-        bgColor = const Color(0xFFEDE9FE);
-        textColor = const Color(0xFF7C3AED);
-        break;
-      case 'teacher':
-        bgColor = const Color(0xFFDBEAFE);
-        textColor = const Color(0xFF2563EB);
-        break;
-      default:
-        bgColor = const Color(0xFFD1FAE5);
-        textColor = const Color(0xFF059669);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        role,
+  Widget _drawerItem(IconData icon, String title, String tab) {
+    bool isSelected = activeTab == tab;
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.indigo : Colors.grey),
+      title: Text(
+        title,
         style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          color: isSelected ? Colors.indigo : Colors.black87,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
+      selected: isSelected,
+      onTap: () {
+        setState(() => activeTab = tab);
+        Navigator.pop(context);
+      },
     );
   }
 
-  Widget _buildLevels() {
-    return Column(
-      children: levels.map((level) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                level.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.2,
-                ),
-                itemCount: level.subLevels.length,
-                itemBuilder: (context, index) {
-                  final subLevel = level.subLevels[index];
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subLevel.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${subLevel.questions.length} questions',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: subLevel.questions.length,
-                            itemBuilder: (context, qIndex) {
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF3F4F6),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  subLevel.questions[qIndex],
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class UserModal extends StatefulWidget {
-  final User? user;
-  final Function(String name, String email, String role) onSave;
-
-  const UserModal({super.key, this.user, required this.onSave});
-
-  @override
-  State<UserModal> createState() => _UserModalState();
-}
-
-class _UserModalState extends State<UserModal> {
-  late TextEditingController nameController;
-  late TextEditingController emailController;
-  late String selectedRole;
-
-  @override
-  void initState() {
-    super.initState();
-    nameController = TextEditingController(text: widget.user?.name ?? '');
-    emailController = TextEditingController(text: widget.user?.email ?? '');
-    selectedRole = widget.user?.role ?? 'student';
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.user == null ? 'Add User' : 'Edit User'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Role',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'student', child: Text('Student')),
-                DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
-                DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  selectedRole = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (nameController.text.isNotEmpty &&
-                emailController.text.isNotEmpty) {
-              widget.onSave(
-                nameController.text,
-                emailController.text,
-                selectedRole,
-              );
-              Navigator.pop(context);
-            }
-          },
-          child: const Text('Save'),
-        ),
-      ],
-    );
+  Widget _buildUserList() {
+    // Basic Placeholder for mobile user list
+    return const Center(child: Text("User Management Logic Goes Here"));
   }
 }
