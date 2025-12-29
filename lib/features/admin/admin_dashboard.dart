@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:codeup/features/admin/question/defaultques_screen.dart';
 import 'package:codeup/features/auth/view/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -185,6 +186,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             _statTile("Pending", 0, Icons.hourglass_top, Colors.orange),
           ],
+        ),
+        SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+               MaterialPageRoute(builder: (context) => const DefaultquesScreen()),
+          ),
+        
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('user status questions'),
+                Icon(Icons.arrow_forward_ios_rounded),
+              ],
+            ),
+          ),
         ),
       ],
     );
