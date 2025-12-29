@@ -3,9 +3,12 @@ import 'package:codeup/features/auth/view/level_screen.dart';
 import 'package:codeup/features/auth/view/profile_screen.dart';
 import 'package:codeup/features/home/view/codingfocus_screen.dart';
 import 'package:codeup/features/home/view/analytics_screen.dart';
+import 'package:codeup/utils/variables/global_variables.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
+
+import '../../admin/question/user_defquizattand_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,12 +18,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  String userName = "Champion";
-  String userLevel = "Intermediate";
-  int currentXP = 750;
-  int totalXP = 1000;
+  late String userName;
+  late String userLevel;
+  late int currentXP;
+  late int totalXP;
   int streak = 7;
-  int completedChallenges = 23;
+  late int completedChallenges;
   int totalChallenges = 50;
 
   late AnimationController _fadeController;
@@ -31,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _initializeUserData();
 
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -55,6 +59,71 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _fadeController.forward();
     _slideController.forward();
   }
+
+  void _initializeUserData() {
+  // Get user from global variable
+  if (globalUser != null) {
+    userName = globalUser!.name;
+    int userScore = globalUser!.userStartStage ?? 0;
+    completedChallenges = userScore;
+    
+    // Get totalXP from user, defaults to 10
+    totalXP = globalUser!.totalXP;
+    
+    // Calculate level based on score
+    userLevel = _calculateUserLevel(userScore);
+    
+    // Calculate current XP (progress within current level)
+    currentXP = userScore % 10;
+  } else {
+    userName = "Champion";
+    userLevel = "Beginner";
+    currentXP = 0;
+    totalXP = 10;
+    completedChallenges = 0;
+  }
+}
+
+  /// Calculate user level based on score
+  /// < 4: Beginner, 4-7: Intermediate, > 7: Advanced
+  String _calculateUserLevel(int score) {
+  if (score < 4) {
+    return "Beginner";
+  } else if (score >= 4 && score < 7) {
+    return "Intermediate";
+  } else {
+    return "Advanced";
+  }
+}
+
+  /// Get gradient colors based on user level
+  List<Color> _getLevelGradient(String level) {
+  switch (level) {
+    case "Beginner":
+      return const [Color(0xFF667eea), Color(0xFF764ba2)];
+    case "Intermediate":
+      return const [Color(0xFF11998e), Color(0xFF38ef7d)];
+    case "Advanced":
+      return const [Color(0xFFf093fb), Color(0xFFf5576c)];
+    default:
+      return const [Color(0xFF667eea), Color(0xFF764ba2)];
+  }
+}
+
+
+  /// Get level icon based on user level
+ IconData _getLevelIcon(String level) {
+  switch (level) {
+    case "Beginner":
+      return Icons.school;
+    case "Intermediate":
+      return Icons.trending_up;
+    case "Advanced":
+      return Icons.emoji_events;
+    default:
+      return Icons.school;
+  }
+}
 
   @override
   void dispose() {
@@ -115,34 +184,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hello, $userName! 👋',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    blurRadius: 10.0,
-                    color: Colors.black26,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hello, \n$userName! 👋',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 10.0,
+                      color: Colors.black26,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Ready to conquer coding?',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.white70,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 4),
+              const Text(
+                'Ready to conquer coding?',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         GestureDetector(
           onTap: () {
@@ -162,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -189,6 +260,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildWelcomeCard() {
     double progress = currentXP / totalXP;
+    final levelGradient = _getLevelGradient(userLevel);
+    final levelIcon = _getLevelIcon(userLevel);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -197,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -221,20 +294,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: levelGradient),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          levelIcon,
+                          color: Colors.white,
+                          size: 16,
                         ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
+                        const SizedBox(width: 6),
+                        Text(
                           userLevel,
                           style: const TextStyle(
                             color: Colors.white,
@@ -242,20 +319,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFA726).withValues(alpha:0.1),
+                  color: const Color(0xFFFFA726).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.emoji_events,
-                  color: Color(0xFFFFA726),
+                child: Icon(
+                  levelIcon,
+                  color: const Color(0xFFFFA726),
                   size: 32,
                 ),
               ),
@@ -275,9 +352,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               Text(
                 '$currentXP / $totalXP XP',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF667eea),
+                  color: Color.lerp(
+                    levelGradient[0],
+                    levelGradient[1],
+                    0.5,
+                  ),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -298,13 +379,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Container(
                   height: 12,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                    ),
+                    gradient: LinearGradient(colors: levelGradient),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF667eea).withValues(alpha:0.4),
+                        color: levelGradient[0].withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -319,10 +398,96 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             '${(progress * 100).toInt()}% Complete • ${totalXP - currentXP} XP to next level',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.blue.shade700,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _getLevelDescription(userLevel),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if(progress<=0)
+          const SizedBox(height: 16),
+           if(progress<=0)
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () async{
+               await  Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AttendQuizScreen(),
+                  ),
+                );
+                _initializeUserData();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF667eea),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.quiz,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Attend Starting Quiz',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  String _getLevelDescription(String level) {
+  switch (level) {
+    case "Beginner":
+      return "You're starting your coding journey! Complete more quizzes to advance.";
+    case "Intermediate":
+      return "Great progress! You're mastering the fundamentals. Keep practicing!";
+    case "Advanced":
+      return "Excellent work! You're a coding expert. Challenge yourself with harder tasks!";
+    default:
+      return "Complete quizzes to improve your level.";
+  }
+}
 
   Widget _buildStreakCard() {
     return Container(
@@ -334,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF6B6B).withValues(alpha:  0.4),
+            color: const Color(0xFFFF6B6B).withValues(alpha: 0.4),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -345,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha:0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -382,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha:0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
@@ -406,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: _buildStatCard(
             icon: Icons.check_circle,
             value: completedChallenges.toString(),
-            label: 'Completed',
+            label: 'Quiz Score',
             gradient: const [Color(0xFF11998e), Color(0xFF38ef7d)],
           ),
         ),
@@ -414,9 +579,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Expanded(
           child: _buildStatCard(
             icon: Icons.trending_up,
-            value:
-                '${((completedChallenges / totalChallenges) * 100).toInt()}%',
-            label: 'Progress',
+            value: userLevel,
+            label: 'Your Level',
             gradient: const [Color(0xFF6a11cb), Color(0xFF2575fc)],
           ),
         ),
@@ -437,7 +601,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -461,6 +625,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               fontWeight: FontWeight.bold,
               color: Color(0xFF2D3748),
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
@@ -542,21 +707,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             MaterialPageRoute(builder: (context) => const CodingfocusScreen()),
           ),
         ),
-        _buildFeatureCard(
-          context: context,
-          icon: Icons.lightbulb,
-          label: 'Daily Challenge',
-          subtitle: 'Earn bonus XP',
-          gradient: const [Color(0xFFfa709a), Color(0xFFfee140)],
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Daily Challenge coming soon! 🚀'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-        ),
       ],
     );
   }
@@ -580,7 +730,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -596,7 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: gradient[0].withValues(alpha:0.3),
+                      color: gradient[0].withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -636,7 +786,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

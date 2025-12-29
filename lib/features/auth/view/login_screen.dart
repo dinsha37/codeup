@@ -56,19 +56,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // Save user data to SharedPreferences
   Future<void> _saveUserToPreferences(
     String uid,
-    String name,
     String email,
-    int status,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('uid', uid);
-    await prefs.setString('name', name);
     await prefs.setString('email', email);
-    await prefs.setInt('status', status);
-    await prefs.setBool('isLoggedIn', true);
-    if (_rememberMe) {
-      await prefs.setBool('rememberMe', true);
-    }
+    
   }
 
   Future<void> _handleLogin() async {
@@ -158,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         // Save user data to SharedPreferences
-        await _saveUserToPreferences(uid, name, email, status);
+        await _saveUserToPreferences(uid, email);
 
         setState(() {
           _isLoading = false;
@@ -242,6 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 100,),
                 // Title
                 const Text(
                   "Welcome Back",
@@ -256,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   "Please sign in to continue",
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Email Input
                 TextFormField(
@@ -335,59 +329,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Remember Me & Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Remember me",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // TODO: Implement forgot password
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Forgot password feature coming soon!",
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+
 
                 const SizedBox(height: 30),
 

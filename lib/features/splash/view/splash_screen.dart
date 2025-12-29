@@ -32,11 +32,10 @@ class _SplashScreenState extends State<SplashScreen> {
       final prefs = await SharedPreferences.getInstance();
       
       // Check if user is logged in
-      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
       final uid = prefs.getString('uid');
       final email = prefs.getString('email');
 
-      if (!isLoggedIn || uid == null || email == null) {
+      if (uid == null || email == null) {
         // User not logged in, navigate to Login Screen
         if (mounted) {
           Navigator.pushAndRemoveUntil(

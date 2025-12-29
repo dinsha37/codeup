@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:codeup/features/auth/view/login_screen.dart';
-import 'package:codeup/features/auth/view/readyforiq_screen.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -185,7 +183,11 @@ class _SignupScreenState extends State<SignupScreen> {
             .doc(userCredential.user?.uid)
             .set({
               'uid': userCredential.user?.uid,
-              'name': nameController.text.trim(),
+              'name': nameController.text,
+              'namefilter': List.generate(
+                nameController.text.length,
+                (index) => nameController.text.substring(0, index + 1),
+              ),
               'email': email,
               'password': passwordController.text.trim(),
               'createdAt': DateTime.now(),
