@@ -8,8 +8,13 @@ class UserModel {
   final String password;
   final DateTime createdAt;
   final int status;
-  final int? userStartStage; // Quiz score (null if not attempted)
-  final int totalXP; // Total XP available for the current level
+  final int? userStartStage;
+  final int totalXP;
+  
+  // New profile fields
+  final String? mobileNumber;
+  final String? dateOfBirth;
+  final String? skillLevel;
 
   const UserModel({
     required this.uid,
@@ -20,7 +25,10 @@ class UserModel {
     required this.createdAt,
     required this.status,
     this.userStartStage,
-    this.totalXP = 10, // Default value
+    this.totalXP = 10,
+    this.mobileNumber,
+    this.dateOfBirth,
+    this.skillLevel,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> map) {
@@ -34,6 +42,9 @@ class UserModel {
       status: map['status'] as int,
       userStartStage: map['userStartStage'] as int?,
       totalXP: map['totalXP'] as int? ?? 10,
+      mobileNumber: map['mobileNumber'] as String?,
+      dateOfBirth: map['dateOfBirth'] as String?,
+      skillLevel: map['skillLevel'] as String?,
     );
   }
 
@@ -48,6 +59,9 @@ class UserModel {
       'status': status,
       'userStartStage': userStartStage,
       'totalXP': totalXP,
+      'mobileNumber': mobileNumber,
+      'dateOfBirth': dateOfBirth,
+      'skillLevel': skillLevel,
     };
   }
 
@@ -62,6 +76,9 @@ class UserModel {
     int? status,
     int? userStartStage,
     int? totalXP,
+    String? mobileNumber,
+    String? dateOfBirth,
+    String? skillLevel,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -73,6 +90,9 @@ class UserModel {
       status: status ?? this.status,
       userStartStage: userStartStage ?? this.userStartStage,
       totalXP: totalXP ?? this.totalXP,
+      mobileNumber: mobileNumber ?? this.mobileNumber,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      skillLevel: skillLevel ?? this.skillLevel,
     );
   }
 }

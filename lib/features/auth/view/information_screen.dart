@@ -1,5 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../../utils/variables/global_variables.dart';
+import '../model/user_model.dart';
 
 class InformationScreen extends StatefulWidget {
   const InformationScreen({super.key});
@@ -9,44 +12,81 @@ class InformationScreen extends StatefulWidget {
 }
 
 class _InformationScreenState extends State<InformationScreen> {
-  // 1. Data and State Management
-  bool _isEditing = false; // Controls view vs. edit mode
+  bool _isEditing = false;
+  bool _isLoading = true;
 
-  // Current User Data (These would typically come from a model or API)
-  String _mobileNumber = '+91 9876543210';
-  String _dateOfBirth = '05 Oct 2002';
-  String _skillLevel = 'Beginner';
+  // Current User Data from Firebase
+  String _mobileNumber = '';
+  String _dateOfBirth = '';
+  String _skillLevel = '';
+  String _userName = '';
+  String _userEmail = '';
 
   // Controllers for TextField inputs when in edit mode
   late TextEditingController _mobileController;
   late TextEditingController _dobController;
   late TextEditingController _skillController;
+
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with current data
+    _initializeControllers();
+    _fetchUserData();
+  }
+
+  void _initializeControllers() {
     _mobileController = TextEditingController(text: _mobileNumber);
     _dobController = TextEditingController(text: _dateOfBirth);
     _skillController = TextEditingController(text: _skillLevel);
   }
 
-  @override
-  void dispose() {
-    _mobileController.dispose();
-    _dobController.dispose();
-    _skillController.dispose();
-    super.dispose();
+  Future<void> _fetchUserData() async {
+    try {
+      // Get the current user's UID from your global variable
+      final uid = globalUser?.uid;
+      
+      if (uid == null) {
+        _showErrorSnackBar('User not authenticated');
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(uid)
+          .get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data() ?? {};
+        
+        setState(() {
+          _userName = data['name'] ?? 'User';
+          _userEmail = data['email'] ?? '';
+          _mobileNumber = data['mobileNumber'] ?? '';
+          _dateOfBirth = data['dateOfBirth'] ?? '';
+          _skillLevel = data['skillLevel'] ?? 'Not Set';
+          _isLoading = false;
+        });
+
+        // Update controllers
+        _mobileController.text = _mobileNumber;
+        _dobController.text = _dateOfBirth;
+        _skillController.text = _skillLevel;
+      } else {
+        _showErrorSnackBar('User document not found');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error fetching user data: ${e.toString()}');
+      setState(() => _isLoading = false);
+    }
   }
 
-  // Function to toggle the editing mode
   void _toggleEditMode() {
     setState(() {
       _isEditing = !_isEditing;
-      // If switching to view mode, call the save function
       if (!_isEditing) {
         _saveChanges();
       }
-      // If switching to edit mode, reset controllers to current data
       if (_isEditing) {
         _mobileController.text = _mobileNumber;
         _dobController.text = _dateOfBirth;
@@ -55,20 +95,64 @@ class _InformationScreenState extends State<InformationScreen> {
     });
   }
 
-  // Function to save changes
-  void _saveChanges() {
-    // 1. Update the state variables with new values from controllers
-    _mobileNumber = _mobileController.text;
-    _dateOfBirth = _dobController.text;
-    _skillLevel = _skillController.text;
+  Future<void> _saveChanges() async {
+    try {
+      final uid = globalUser?.uid;
+      
+      if (uid == null) {
+        _showErrorSnackBar('User not authenticated');
+        return;
+      }
 
-    // 2. Here you would typically call an API to save the data
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Profile changes saved!')));
+      // Update local state
+      _mobileNumber = _mobileController.text;
+      _dateOfBirth = _dobController.text;
+      _skillLevel = _skillController.text;
+
+      // Update Firestore
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(uid)
+          .update({
+            'mobileNumber': _mobileNumber,
+            'dateOfBirth': _dateOfBirth,
+            'skillLevel': _skillLevel,
+          });
+final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(uid)
+          .get();
+           final userData = userDoc.data()!;
+            final userModel = UserModel.fromJson(userDoc.data()!);
+         globalUser = userModel;
+      if (mounted) {
+        _showSuccessSnackBar('Profile changes saved!');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error saving changes: ${e.toString()}');
+    }
   }
 
-  // --- Helper Widget for the Editable Cards ---
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Widget _buildEditableInfoCard({
     required IconData icon,
     required String title,
@@ -94,53 +178,63 @@ class _InformationScreenState extends State<InformationScreen> {
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 4),
-                    // 2. Conditional Widget Rendering (The Core of In-Place Edit)
                     isEditable
                         ? TextField(
                             controller: controller,
                             keyboardType: title == 'Mobile Number'
-                            ? TextInputType.phone
-                            : TextInputType.text,
+                                ? TextInputType.phone
+                                : TextInputType.text,
                             style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                             decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                            border: InputBorder.none, // Removes underline
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              border: InputBorder.none,
                             ),
                           )
                         : Text(
-                            currentValue,
+                            currentValue.isEmpty ? 'Not Set' : currentValue,
                             style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          leading: const BackButton(),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
         leading: const BackButton(),
         actions: [
-          // The Edit/Save Button
           TextButton(
             onPressed: _toggleEditMode,
             child: Text(
-              _isEditing ? 'Save' : 'Edit', // Toggle Text
-              style: TextStyle(
+              _isEditing ? 'Save' : 'Edit',
+              style: const TextStyle(
                 color: Colors.blue,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -153,7 +247,6 @@ class _InformationScreenState extends State<InformationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 1. User Avatar and Details Section (Static)
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Center(
@@ -169,23 +262,21 @@ class _InformationScreenState extends State<InformationScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Fida Fathima',
-                      style: TextStyle(
+                    Text(
+                      _userName,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text(
-                      'fida@example.com',
-                      style: TextStyle(color: Colors.grey),
+                    Text(
+                      _userEmail,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),
               ),
             ),
-
-            // 2. Account Information Title
             const Padding(
               padding: EdgeInsets.only(left: 16.0, top: 10.0, bottom: 8.0),
               child: Text(
@@ -193,8 +284,6 @@ class _InformationScreenState extends State<InformationScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-
-            // 3. Editable Information Cards (Using the helper widget)
             _buildEditableInfoCard(
               icon: Icons.phone,
               title: 'Mobile Number',
@@ -216,35 +305,23 @@ class _InformationScreenState extends State<InformationScreen> {
               controller: _skillController,
               isEditable: _isEditing,
             ),
-
-            // 4. Non-Editable Action Buttons (Change Password & Logout)
-            // These would still navigate to a separate screen.
-            _ActionCard(
-              icon: Icons.lock,
-              title: 'Change Password',
-              isDestructive: false,
-              onTap: () {
-                // Navigate to Change Password Screen
-              },
-            ),
-            _ActionCard(
-              icon: Icons.logout,
-              title: 'Logout',
-              isDestructive: true,
-              onTap: () {
-                // Handle logout logic
-              },
-            ),
+            
           ],
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _mobileController.dispose();
+    _dobController.dispose();
+    _skillController.dispose();
+    super.dispose();
+  }
 }
 
-// Helper widget for action buttons (reused from the previous answer)
 class _ActionCard extends StatelessWidget {
-  // ... (Code for _ActionCard is the same as the previous response)
   final IconData icon;
   final String title;
   final bool isDestructive;

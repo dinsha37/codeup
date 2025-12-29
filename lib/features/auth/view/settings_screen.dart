@@ -3,6 +3,7 @@ import 'package:codeup/features/auth/view/login_screen.dart';
 import 'package:codeup/features/auth/view/privacypolicy_screen.dart';
 import 'package:codeup/features/auth/view/terms_screen.dart';
 import 'package:codeup/features/auth/view/feedback_screen.dart';
+import 'package:codeup/utils/variables/global_variables.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,25 +16,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDarkMode = false;
-  bool _notifications = true;
-  String _language = 'English';
-  String _userName = 'User';
-  String _userEmail = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
   }
 
-  Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userName = prefs.getString('name') ?? 'User';
-      _userEmail = prefs.getString('email') ?? '';
-    });
-  }
+
 
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
@@ -132,9 +121,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     radius: 32,
                     backgroundColor: Colors.blue[100],
                     child: Text(
-                      _userName[0].toUpperCase(),
+                      globalUser?.name[0].toUpperCase()??'N/A',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue[700],
                       ),
@@ -146,16 +135,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _userName,
+                          globalUser?.name??'N/A',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1F2937),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _userEmail,
+                          globalUser?.email??'N/A',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -180,54 +169,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 8),
 
-            // App Preferences
-            _buildSection(
-              title: 'App Preferences',
-              children: [
-                _buildSwitchTile(
-                  icon: Icons.dark_mode_rounded,
-                  title: 'Dark Mode',
-                  subtitle: 'Switch to dark theme',
-                  value: _isDarkMode,
-                  onChanged: (v) => setState(() => _isDarkMode = v),
-                ),
-                _buildNavigationTile(
-                  icon: Icons.language_rounded,
-                  title: 'Language',
-                  subtitle: 'Choose your language',
-                  trailing: Text(
-                    _language,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                  onTap: () => _showLanguagePicker(),
-                ),
-                _buildSwitchTile(
-                  icon: Icons.notifications_rounded,
-                  title: 'Notifications',
-                  subtitle: 'Enable push notifications',
-                  value: _notifications,
-                  onChanged: (v) => setState(() => _notifications = v),
-                ),
-              ],
-            ),
+            
 
-            // Account
-            _buildSection(
-              title: 'Account',
-              children: [
-                _buildNavigationTile(
-                  icon: Icons.lock_rounded,
-                  title: 'Change Password',
-                  subtitle: 'Update your password',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => InformationScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
+            
 
             // Support
             _buildSection(
@@ -305,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 24),
               child: Text(
-                'Version 1.2.3',
+                'Version 1.0.0',
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ),
@@ -353,43 +297,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: Colors.blue[700], size: 24),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1F2937),
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-      ),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: Colors.blue,
-      ),
-      onTap: () => onChanged(!value),
-    );
-  }
+  
 
   Widget _buildNavigationTile({
     required IconData icon,
@@ -427,45 +335,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showLanguagePicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select Language',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ...[
-              ('English', '🇺🇸'),
-              ('Spanish', '🇪🇸'),
-              ('French', '🇫🇷'),
-              ('German', '🇩🇪'),
-              ('Hindi', '🇮🇳'),
-            ].map(
-              (lang) => ListTile(
-                leading: Text(lang.$2, style: const TextStyle(fontSize: 24)),
-                title: Text(lang.$1),
-                trailing: _language == lang.$1
-                    ? const Icon(Icons.check_circle, color: Colors.blue)
-                    : null,
-                onTap: () {
-                  setState(() => _language = lang.$1);
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+ 
 }
