@@ -78,7 +78,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha:0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -102,7 +102,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                         'Choose your programming journey',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha:0.9),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -162,7 +162,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? lang['color'].withOpacity(0.1)
+                                          ? lang['color'].withValues(alpha:0.1)
                                           : Colors.grey[50],
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
@@ -175,7 +175,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                                           ? [
                                               BoxShadow(
                                                 color: lang['color']
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha:0.3),
                                                 blurRadius: 12,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -189,7 +189,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
                                             color: isSelected
-                                                ? lang['color'].withOpacity(0.2)
+                                                ? lang['color'].withValues(alpha:0.2)
                                                 : Colors.grey[200],
                                             borderRadius: BorderRadius.circular(
                                               16,
@@ -326,7 +326,7 @@ class _ReadyforiqScreenState extends State<ReadyforiqScreen>
                             elevation: selectedLanguage == null ? 0 : 8,
                             shadowColor: const Color(
                               0xFF667EEA,
-                            ).withOpacity(0.4),
+                            ).withValues(alpha:0.4),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

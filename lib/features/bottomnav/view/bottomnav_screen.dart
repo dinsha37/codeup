@@ -30,7 +30,7 @@ class _BottomnavScreenState extends State<BottomnavScreen> {
       body: pages.elementAt(selectedindex),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white.withOpacity(0.95),
+        backgroundColor: Colors.white.withValues(alpha:0.95),
         selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.blueGrey,
         currentIndex: selectedindex,

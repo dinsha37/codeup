@@ -396,7 +396,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: getTextColor().withOpacity(0.1),
+                color: getTextColor().withValues(alpha:0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -509,7 +509,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
             width: 150,
             height: 150,
             decoration: BoxDecoration(
-              color: getPerformanceColor().withOpacity(0.1),
+              color: getPerformanceColor().withValues(alpha:0.1),
               shape: BoxShape.circle,
               border: Border.all(color: getPerformanceColor(), width: 4),
             ),
@@ -792,7 +792,7 @@ class LevelCard extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha:0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Center(

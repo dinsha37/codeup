@@ -265,7 +265,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: cert.gradientColors[0].withOpacity(0.3),
+                  color: cert.gradientColors[0].withValues(alpha:0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -293,7 +293,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha:0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -675,7 +675,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha:0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 28),

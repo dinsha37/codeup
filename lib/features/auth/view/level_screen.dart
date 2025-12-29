@@ -117,9 +117,9 @@ class _LevelScreenState extends State<LevelScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha:0.15),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha:0.3)),
       ),
       child: Column(
         children: [
@@ -146,7 +146,7 @@ class _LevelScreenState extends State<LevelScreen>
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha:0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
@@ -213,7 +213,7 @@ class _LevelScreenState extends State<LevelScreen>
                 boxShadow: [
                   BoxShadow(
                     color: (isLocked ? Colors.grey : level.gradientColors[0])
-                        .withOpacity(0.3),
+                        .withValues(alpha:0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -239,7 +239,7 @@ class _LevelScreenState extends State<LevelScreen>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha:0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -306,7 +306,7 @@ class _LevelScreenState extends State<LevelScreen>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(color: Colors.white.withOpacity(0.2)),
+                      Divider(color: Colors.white.withValues(alpha:0.2)),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -361,7 +361,7 @@ class _LevelScreenState extends State<LevelScreen>
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(

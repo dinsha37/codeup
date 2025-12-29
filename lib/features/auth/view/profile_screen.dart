@@ -66,7 +66,7 @@ class UserHeader extends StatelessWidget {
             border: Border.all(color: Colors.blue, width: 3),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.4),
+                color: Colors.green.withValues(alpha:0.4),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
@@ -94,7 +94,7 @@ class UserHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha:0.2),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.blue, width: 1),
           ),
@@ -169,9 +169,9 @@ class MetricCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.blue.withValues(alpha:0.1), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -209,7 +209,7 @@ class CertificatesSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
