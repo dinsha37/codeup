@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     radius: 32,
                     backgroundColor: Colors.blue[100],
                     child: Text(
-                      globalUser?.name[0].toUpperCase()??'N/A',
+                      globalUser?.name?[0].toUpperCase()??'N/A',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,

@@ -63,12 +63,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _initializeUserData() {
   // Get user from global variable
   if (globalUser != null) {
-    userName = globalUser!.name;
+    userName = globalUser?.name??'';
     int userScore = globalUser!.userStartStage ?? 0;
     completedChallenges = userScore;
     
     // Get totalXP from user, defaults to 10
-    totalXP = globalUser!.totalXP;
+    totalXP = globalUser?.totalXP??0;
     
     // Calculate level based on score
     userLevel = _calculateUserLevel(userScore);

@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+ios/build/ios/XCBuildData/PIFCache/project/PROJECT@v11_mod=da4eccd3d2408b35836bcdd935fd295a_hash=bfdfe7dc352907fc980b868725387e98plugins=1OJSG6M1FOV3XYQCBH7Z29RZ0FPR9XDE1-json
+ios/build/ios/XCBuildData/PIFCache/target/TARGET@v11_hash=1c90680d4135ea9616d7d9fc2f2ed932-json
+.gitignore
