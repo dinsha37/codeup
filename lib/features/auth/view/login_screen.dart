@@ -5,6 +5,7 @@ import 'package:codeup/features/auth/view/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utils/variables/global_variables.dart';
@@ -24,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _rememberMe = false;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -38,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email';
+      return 'Please enter a valid email (e.g., user@example.com)';
     }
     return null;
   }
@@ -53,6 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
+  void _clearErrors() {
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+  }
+
   // Save user data to SharedPreferences
   Future<void> _saveUserToPreferences(
     String uid,
@@ -61,10 +71,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('uid', uid);
     await prefs.setString('email', email);
-    
   }
 
   Future<void> _handleLogin() async {
+    _clearErrors();
+    
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -85,18 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
           // User not found in database
           setState(() {
             _isLoading = false;
+            _emailError = 'No account found with this email. Please sign up first.';
           });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'No account found with this email. Please sign up first.',
-                ),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
           return;
         }
 
@@ -110,37 +111,15 @@ class _LoginScreenState extends State<LoginScreen> {
           // User is blocked
           setState(() {
             _isLoading = false;
+            _emailError = 'Your account has been blocked. Please contact support.';
           });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Your account has been blocked. Please contact support.',
-                ),
-                backgroundColor: Colors.red,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
           return;
         } else if (status == -1) {
           // User account was deleted
           setState(() {
             _isLoading = false;
+            _emailError = 'Your account was deleted. Please sign up again to reactivate.';
           });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Your account was deleted. Please sign up again to reactivate.',
-                ),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
           return;
         }
 
@@ -187,24 +166,82 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
 
-        String errorMessage = 'Login failed. Please try again.';
-
+        // Handle different Firebase Auth error codes
         if (e.code == 'user-not-found') {
-          errorMessage = 'No account found with this email.';
+          setState(() {
+            _emailError = 'No account found with this email.';
+          });
         } else if (e.code == 'wrong-password') {
-          errorMessage = 'Incorrect password. Please try again.';
+          setState(() {
+            _passwordError = 'Incorrect password. Please try again.';
+          });
         } else if (e.code == 'invalid-email') {
-          errorMessage = 'Invalid email format.';
+          setState(() {
+            _emailError = 'Invalid email format.';
+          });
+        } else if (e.code == 'invalid-credential') {
+          // Handle invalid credentials (email or password is wrong)
+          setState(() {
+            _emailError = 'Invalid email or password.';
+            _passwordError = 'Invalid email or password.';
+          });
         } else if (e.code == 'user-disabled') {
-          errorMessage = 'This account has been disabled.';
+          setState(() {
+            _emailError = 'This account has been disabled.';
+          });
         } else if (e.code == 'too-many-requests') {
-          errorMessage = 'Too many login attempts. Please try again later.';
+          setState(() {
+            _emailError = 'Too many login attempts. Please try again later.';
+          });
+        } else if (e.code == 'network-request-failed') {
+          setState(() {
+            _emailError = 'Network error. Please check your connection.';
+          });
+        } else {
+          // Generic error message for unknown errors
+          setState(() {
+            _emailError = 'Login failed: ${e.message ?? 'Please try again.'}';
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${e.code}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
+      } on PlatformException catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-          );
+        // Handle PlatformException errors from Firebase
+        if (e.code == 'invalid-credential') {
+          setState(() {
+            _emailError = 'Invalid email or password.';
+            _passwordError = 'Invalid email or password.';
+          });
+        } else if (e.code == 'network-request-failed') {
+          setState(() {
+            _emailError = 'Network error. Please check your connection.';
+          });
+        } else if (e.code == 'too-many-requests') {
+          setState(() {
+            _emailError = 'Too many login attempts. Please try again later.';
+          });
+        } else {
+          setState(() {
+            _emailError = 'Login failed. Please check your credentials.';
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${e.message ?? e.code}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       } catch (e) {
         setState(() {
@@ -235,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 100,),
+                const SizedBox(height: 100),
                 // Title
                 const Text(
                   "Welcome Back",
@@ -257,27 +294,37 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: emailController,
                   validator: _validateEmail,
                   keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => _clearErrors(),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.email_outlined),
                     hintText: "Email",
                     labelText: "Email",
+                    helperText: _emailError != null ? null : 'Enter your registered email',
+                    errorText: _emailError,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: _emailError != null ? Colors.red : Colors.grey[300]!,
+                        width: _emailError != null ? 2 : 1,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
+                      borderSide: BorderSide(
+                        color: _emailError != null ? Colors.red : Colors.blue,
                         width: 2,
                       ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.red),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
                     ),
                   ),
                   textInputAction: TextInputAction.next,
@@ -289,6 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: passwordController,
                   validator: _validatePassword,
                   obscureText: _obscurePassword,
+                  onChanged: (_) => _clearErrors(),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -305,32 +353,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     hintText: "Password",
                     labelText: "Password",
+                    helperText: _passwordError != null ? null : 'Minimum 6 characters',
+                    errorText: _passwordError,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: _passwordError != null ? Colors.red : Colors.grey[300]!,
+                        width: _passwordError != null ? 2 : 1,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
+                      borderSide: BorderSide(
+                        color: _passwordError != null ? Colors.red : Colors.blue,
                         width: 2,
                       ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.red),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
                     ),
                   ),
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleLogin(),
                 ),
-                const SizedBox(height: 16),
-
-
-
                 const SizedBox(height: 30),
 
                 // Login Button
@@ -358,9 +411,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           )
-                        : Row(
+                        : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Text(
                                 "LOGIN",
                                 style: TextStyle(

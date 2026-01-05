@@ -1,8 +1,11 @@
 // question_screen.dart
-import 'dart:developer';
+// ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../question/model/questin_model.dart';
+import 'addquetionuderlevel_screen.dart'; // Import the new screen
 
 class QuestionUnderSubScreen extends StatefulWidget {
   final String subLevelId;
@@ -10,11 +13,11 @@ class QuestionUnderSubScreen extends StatefulWidget {
   final String mainLevelName;
 
   const QuestionUnderSubScreen({
-    Key? key,
+    super.key,
     required this.subLevelId,
     required this.subLevelName,
     required this.mainLevelName,
-  }) : super(key: key);
+  });
 
   @override
   State<QuestionUnderSubScreen> createState() => _QuestionUnderSubScreenState();
@@ -119,7 +122,7 @@ class _QuestionUnderSubScreenState extends State<QuestionUnderSubScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'Q${order}',
+                              'Q$order',
                               style: const TextStyle(
                                 color: Colors.indigo,
                                 fontWeight: FontWeight.bold,
@@ -129,7 +132,7 @@ class _QuestionUnderSubScreenState extends State<QuestionUnderSubScreen> {
                           const Spacer(),
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-                            onPressed: () => _showEditDialog(
+                            onPressed: () => _navigateToEditQuestion(
                               doc.id,
                               question,
                               options,
@@ -225,7 +228,7 @@ class _QuestionUnderSubScreenState extends State<QuestionUnderSubScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
+        onPressed: _navigateToAddQuestion,
         icon: const Icon(Icons.add),
         label: const Text('Add Question'),
         backgroundColor: Colors.indigo,
@@ -234,243 +237,119 @@ class _QuestionUnderSubScreenState extends State<QuestionUnderSubScreen> {
     );
   }
 
-  void _showAddDialog() {
-    _showQuestionDialog();
+  Future<void> _navigateToAddQuestion() async {
+    final result = await Navigator.push<QuestionModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddQuestionUnderLevelScreen(
+          subLevelId: widget.subLevelId,
+          subLevelName: widget.subLevelName,
+          mainLevelName: widget.mainLevelName,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      try {
+        final questionData = result.toMap();
+        questionData['createdAt'] = FieldValue.serverTimestamp();
+        
+        await _firestore.collection('questions').add(questionData);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Question created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating question: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
-  void _showEditDialog(
+  Future<void> _navigateToEditQuestion(
     String docId,
     String currentQuestion,
     List<String> currentOptions,
     int currentCorrectAnswer,
     int currentOrder,
-  ) {
-    _showQuestionDialog(
-      docId: docId,
-      initialQuestion: currentQuestion,
-      initialOptions: currentOptions,
-      initialCorrectAnswer: currentCorrectAnswer,
-      initialOrder: currentOrder,
-    );
-  }
-
-  void _showQuestionDialog({
-    String? docId,
-    String? initialQuestion,
-    List<String>? initialOptions,
-    int? initialCorrectAnswer,
-    int? initialOrder,
-  }) {
-    final questionController = TextEditingController(text: initialQuestion ?? '');
-    final option1Controller = TextEditingController(
-      text: initialOptions != null && initialOptions.isNotEmpty
-          ? initialOptions[0]
-          : '',
-    );
-    final option2Controller = TextEditingController(
-      text: initialOptions != null && initialOptions.length > 1
-          ? initialOptions[1]
-          : '',
-    );
-    final option3Controller = TextEditingController(
-      text: initialOptions != null && initialOptions.length > 2
-          ? initialOptions[2]
-          : '',
-    );
-    final option4Controller = TextEditingController(
-      text: initialOptions != null && initialOptions.length > 3
-          ? initialOptions[3]
-          : '',
-    );
-    final orderController = TextEditingController(
-      text: initialOrder?.toString() ?? '1',
+  ) async {
+    final existingQuestion = QuestionModel(
+      id: docId,
+      question: currentQuestion,
+      options: currentOptions,
+      correctAnswer: currentCorrectAnswer,
+      order: currentOrder,
+      subLevelId: widget.subLevelId,
     );
 
-    int selectedCorrectAnswer = initialCorrectAnswer ?? 0;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(docId == null ? 'Add Question' : 'Edit Question'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: questionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Question',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Options',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                _buildOptionField(option1Controller, 'Option A', 0,
-                    selectedCorrectAnswer, setState, (val) {
-                  setState(() => selectedCorrectAnswer = val);
-                }),
-                const SizedBox(height: 8),
-                _buildOptionField(option2Controller, 'Option B', 1,
-                    selectedCorrectAnswer, setState, (val) {
-                  setState(() => selectedCorrectAnswer = val);
-                }),
-                const SizedBox(height: 8),
-                _buildOptionField(option3Controller, 'Option C', 2,
-                    selectedCorrectAnswer, setState, (val) {
-                  setState(() => selectedCorrectAnswer = val);
-                }),
-                const SizedBox(height: 8),
-                _buildOptionField(option4Controller, 'Option D', 3,
-                    selectedCorrectAnswer, setState, (val) {
-                  setState(() => selectedCorrectAnswer = val);
-                }),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: orderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Question Order (1, 2, 3...)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (questionController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a question')),
-                  );
-                  return;
-                }
-
-                final options = [
-                  option1Controller.text.trim(),
-                  option2Controller.text.trim(),
-                  option3Controller.text.trim(),
-                  option4Controller.text.trim(),
-                ];
-
-                if (options.any((opt) => opt.isEmpty)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all options')),
-                  );
-                  return;
-                }
-
-                final questionData = {
-                  'subLevelId': widget.subLevelId,
-                  'question': questionController.text.trim(),
-                  'options': options,
-                  'correctAnswer': selectedCorrectAnswer,
-                  'order': int.tryParse(orderController.text) ?? 1,
-                };
-
-                if (docId == null) {
-                  // Create new question
-                  questionData['createdAt'] = FieldValue.serverTimestamp();
-                  await _firestore.collection('questions').add(questionData);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Question created!')),
-                  );
-                } else {
-                  // Update existing question
-                  await _firestore
-                      .collection('questions')
-                      .doc(docId)
-                      .update(questionData);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Question updated!')),
-                  );
-                }
-
-                Navigator.pop(context);
-              },
-              child: Text(docId == null ? 'Add' : 'Update'),
-            ),
-          ],
+    final result = await Navigator.push<QuestionModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddQuestionUnderLevelScreen(
+          question: existingQuestion,
+          subLevelId: widget.subLevelId,
+          subLevelName: widget.subLevelName,
+          mainLevelName: widget.mainLevelName,
         ),
       ),
     );
-  }
 
-  Widget _buildOptionField(
-    TextEditingController controller,
-    String label,
-    int optionIndex,
-    int selectedCorrectAnswer,
-    StateSetter setState,
-    Function(int) onSelect,
-  ) {
-    final isSelected = selectedCorrectAnswer == optionIndex;
-
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: label,
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: isSelected ? Colors.green : Colors.grey,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: isSelected ? Colors.green : Colors.grey,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: isSelected ? Colors.green : Colors.blue,
-                  width: 2,
-                ),
-              ),
+    if (result != null && mounted) {
+      try {
+        await _firestore
+            .collection('questions')
+            .doc(docId)
+            .update(result.toMap());
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Question updated successfully!'),
+              backgroundColor: Colors.green,
             ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        InkWell(
-          onTap: () => onSelect(optionIndex),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.green : Colors.grey[300],
-              shape: BoxShape.circle,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating question: $e'),
+              backgroundColor: Colors.red,
             ),
-            child: Icon(
-              isSelected ? Icons.check : Icons.circle_outlined,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-        ),
-      ],
-    );
+          );
+        }
+      }
+    }
   }
 
   void _showDeleteDialog(String docId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Question'),
-        content: const Text('Are you sure you want to delete this question?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Delete Question'),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to delete this question? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -478,11 +357,28 @@ class _QuestionUnderSubScreenState extends State<QuestionUnderSubScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await _firestore.collection('questions').doc(docId).delete();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Question deleted!')),
-              );
+              try {
+                await _firestore.collection('questions').doc(docId).delete();
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Question deleted successfully!'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting question: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

@@ -1,5 +1,5 @@
-import 'package:codeup/features/auth/view/certificates_screen.dart';
-import 'package:codeup/features/auth/view/level_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:codeup/features/levels/level_screen.dart';
 import 'package:codeup/features/auth/view/profile_screen.dart';
 import 'package:codeup/features/home/view/codingfocus_screen.dart';
 import 'package:codeup/features/home/view/analytics_screen.dart';
@@ -11,13 +11,17 @@ import 'dart:math' as math;
 import '../../admin/question/user_defquizattand_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
+  HomeScreen({super.key, this.onnavigateCerti, this.onnavigateLevels});
+  VoidCallback? onnavigateCerti;
+  VoidCallback? onnavigateLevels;
+  
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  
   late String userName;
   late String userLevel;
   late int currentXP;
@@ -25,6 +29,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int streak = 7;
   late int completedChallenges;
   int totalChallenges = 50;
+  bool _isLoading = true;
+  int totalQuizAttempts = 0;
+  int passedQuizzes = 0;
+  double averageScore = 0.0;
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -53,77 +61,139 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-        );
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+    );
 
     _fadeController.forward();
     _slideController.forward();
   }
 
-  void _initializeUserData() {
-  // Get user from global variable
-  if (globalUser != null) {
-    userName = globalUser?.name??'';
-    int userScore = globalUser!.userStartStage ?? 0;
-    completedChallenges = userScore;
+  Future<void> _initializeUserData() async {
+    setState(() => _isLoading = true);
+
+    if (globalUser != null) {
+      userName = globalUser?.name ?? '';
+      
+      // Get initial score from userStartStage
+      int initialScore = globalUser!.userStartStage ?? 0;
+      
+      // Fetch user progress from Firestore
+      try {
+        final userId = globalUser?.uid;
+        if (userId != null) {
+          // Get completed sublevels
+          final userStatusDoc = await _db.collection('userStatus').doc(userId).get();
+          final completedSubLevels = List<String>.from(
+            userStatusDoc.data()?['completedSubLevels'] ?? []
+          );
+          
+          // Get quiz attempts
+          final quizAttemptsSnapshot = await _db
+              .collection('userStatus')
+              .doc(userId)
+              .collection('quizAttempts')
+              .get();
+          
+          totalQuizAttempts = quizAttemptsSnapshot.docs.length;
+          
+          // Calculate quiz statistics
+          int totalScore = 0;
+          int passedCount = 0;
+          
+          for (var doc in quizAttemptsSnapshot.docs) {
+            final data = doc.data();
+            final score = data['score'] ?? 0;
+            final isPassed = data['isPassed'] ?? false;
+            
+            totalScore += score as int;
+            if (isPassed) passedCount++;
+          }
+          
+          passedQuizzes = passedCount;
+          averageScore = totalQuizAttempts > 0 
+              ? (totalScore / totalQuizAttempts) 
+              : 0.0;
+          
+          // Calculate XP based on completed sublevels
+          completedChallenges = completedSubLevels.length;
+          
+          // Each completed sublevel gives XP
+          int earnedXP = completedSubLevels.length * 10;
+          
+          // Combine with initial score for total progress
+          int totalProgress = initialScore + completedSubLevels.length;
+          
+          // Calculate level based on total progress
+          userLevel = _calculateUserLevel(totalProgress);
+          
+          // Calculate XP within current level (0-100)
+          currentXP = (earnedXP % 100);
+          totalXP = 100;
+          
+        } else {
+          _setDefaultValues();
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+        _setDefaultValues();
+      }
+    } else {
+      _setDefaultValues();
+    }
     
-    // Get totalXP from user, defaults to 10
-    totalXP = globalUser?.totalXP??0;
-    
-    // Calculate level based on score
-    userLevel = _calculateUserLevel(userScore);
-    
-    // Calculate current XP (progress within current level)
-    currentXP = userScore % 10;
-  } else {
+    setState(() => _isLoading = false);
+  }
+
+  void _setDefaultValues() {
     userName = "Champion";
     userLevel = "Beginner";
     currentXP = 0;
-    totalXP = 10;
+    totalXP = 100;
     completedChallenges = 0;
+    totalQuizAttempts = 0;
+    passedQuizzes = 0;
+    averageScore = 0.0;
   }
-}
 
-  /// Calculate user level based on score
-  /// < 4: Beginner, 4-7: Intermediate, > 7: Advanced
-  String _calculateUserLevel(int score) {
-  if (score < 4) {
-    return "Beginner";
-  } else if (score >= 4 && score < 7) {
-    return "Intermediate";
-  } else {
-    return "Advanced";
+  /// Calculate user level based on progress
+  /// 0-9: Beginner, 10-24: Intermediate, 25+: Advanced
+  String _calculateUserLevel(int progress) {
+    if (progress < 10) {
+      return "Beginner";
+    } else if (progress >= 10 && progress < 25) {
+      return "Intermediate";
+    } else {
+      return "Advanced";
+    }
   }
-}
 
   /// Get gradient colors based on user level
   List<Color> _getLevelGradient(String level) {
-  switch (level) {
-    case "Beginner":
-      return const [Color(0xFF667eea), Color(0xFF764ba2)];
-    case "Intermediate":
-      return const [Color(0xFF11998e), Color(0xFF38ef7d)];
-    case "Advanced":
-      return const [Color(0xFFf093fb), Color(0xFFf5576c)];
-    default:
-      return const [Color(0xFF667eea), Color(0xFF764ba2)];
+    switch (level) {
+      case "Beginner":
+        return const [Color(0xFF667eea), Color(0xFF764ba2)];
+      case "Intermediate":
+        return const [Color(0xFF11998e), Color(0xFF38ef7d)];
+      case "Advanced":
+        return const [Color(0xFFf093fb), Color(0xFFf5576c)];
+      default:
+        return const [Color(0xFF667eea), Color(0xFF764ba2)];
+    }
   }
-}
-
 
   /// Get level icon based on user level
- IconData _getLevelIcon(String level) {
-  switch (level) {
-    case "Beginner":
-      return Icons.school;
-    case "Intermediate":
-      return Icons.trending_up;
-    case "Advanced":
-      return Icons.emoji_events;
-    default:
-      return Icons.school;
+  IconData _getLevelIcon(String level) {
+    switch (level) {
+      case "Beginner":
+        return Icons.school;
+      case "Intermediate":
+        return Icons.trending_up;
+      case "Advanced":
+        return Icons.emoji_events;
+      default:
+        return Icons.school;
+    }
   }
-}
 
   @override
   void dispose() {
@@ -148,33 +218,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(context),
-                    const SizedBox(height: 24),
-                    _buildWelcomeCard(),
-                    const SizedBox(height: 20),
-                    _buildStreakCard(),
-                    const SizedBox(height: 20),
-                    _buildStatsRow(),
-                    const SizedBox(height: 24),
-                    _buildQuickActionsTitle(),
-                    const SizedBox(height: 16),
-                    _buildFeatureGrid(context),
-                    const SizedBox(height: 20),
-                    _buildContinueButton(context),
-                  ],
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: RefreshIndicator(
+                      onRefresh: _initializeUserData,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(context),
+                            const SizedBox(height: 24),
+                            _buildWelcomeCard(),
+                            const SizedBox(height: 20),
+                            _buildStreakCard(),
+                            const SizedBox(height: 20),
+                            _buildStatsRow(),
+                            const SizedBox(height: 24),
+                            _buildQuickActionsTitle(),
+                            const SizedBox(height: 16),
+                            _buildFeatureGrid(context),
+                            const SizedBox(height: 20),
+                            _buildContinueButton(context),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );
@@ -262,6 +342,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double progress = currentXP / totalXP;
     final levelGradient = _getLevelGradient(userLevel);
     final levelIcon = _getLevelIcon(userLevel);
+    final hasStarted = globalUser?.userStartStage != null && globalUser!.userStartStage! > 0;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -395,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            '${(progress * 100).toInt()}% Complete • ${totalXP - currentXP} XP to next level',
+            '${(progress * 100).toInt()}% Complete • ${totalXP - currentXP} XP to next milestone',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 16),
@@ -427,67 +508,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          if(progress<=0)
-          const SizedBox(height: 16),
-           if(progress<=0)
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () async{
-               await  Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AttendQuizScreen(),
-                  ),
-                );
-                _initializeUserData();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667eea),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.quiz,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Attend Starting Quiz',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          if (!hasStarted) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AttendQuizScreen(),
                     ),
+                  );
+                  await _initializeUserData();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF667eea),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  elevation: 0,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.quiz,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Attend Starting Quiz',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   String _getLevelDescription(String level) {
-  switch (level) {
-    case "Beginner":
-      return "You're starting your coding journey! Complete more quizzes to advance.";
-    case "Intermediate":
-      return "Great progress! You're mastering the fundamentals. Keep practicing!";
-    case "Advanced":
-      return "Excellent work! You're a coding expert. Challenge yourself with harder tasks!";
-    default:
-      return "Complete quizzes to improve your level.";
+    switch (level) {
+      case "Beginner":
+        return "You're starting your coding journey! Complete more quizzes to advance.";
+      case "Intermediate":
+        return "Great progress! You're mastering the fundamentals. Keep practicing!";
+      case "Advanced":
+        return "Excellent work! You're a coding expert. Challenge yourself with harder tasks!";
+      default:
+        return "Complete quizzes to improve your level.";
+    }
   }
-}
 
   Widget _buildStreakCard() {
     return Container(
@@ -571,16 +652,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: _buildStatCard(
             icon: Icons.check_circle,
             value: completedChallenges.toString(),
-            label: 'Quiz Score',
+            label: 'Completed',
             gradient: const [Color(0xFF11998e), Color(0xFF38ef7d)],
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
-            icon: Icons.trending_up,
-            value: userLevel,
-            label: 'Your Level',
+            icon: Icons.quiz,
+            value: passedQuizzes.toString(),
+            label: 'Passed',
             gradient: const [Color(0xFF6a11cb), Color(0xFF2575fc)],
           ),
         ),
@@ -680,10 +761,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           label: 'Certificates',
           subtitle: 'Your achievements',
           gradient: const [Color(0xFFf093fb), Color(0xFFf5576c)],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CertificatesScreen()),
-          ),
+          onTap: widget.onnavigateCerti ?? () {},
         ),
         _buildFeatureCard(
           context: context,
@@ -795,12 +873,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LevelScreen()),
-            );
-          },
+          onTap: widget.onnavigateLevels,
           borderRadius: BorderRadius.circular(30),
           child: const Center(
             child: Row(

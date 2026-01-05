@@ -5,21 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'question_screen.dart';
 
-class SubLevelScreen extends StatefulWidget {
+class AdminSubLevelScreen extends StatefulWidget {
   final String mainLevelId;
   final String mainLevelName;
 
-  const SubLevelScreen({
+  const AdminSubLevelScreen({
     Key? key,
     required this.mainLevelId,
     required this.mainLevelName,
   }) : super(key: key);
 
   @override
-  State<SubLevelScreen> createState() => _SubLevelScreenState();
+  State<AdminSubLevelScreen> createState() => _AdminSubLevelScreenState();
 }
 
-class _SubLevelScreenState extends State<SubLevelScreen> {
+class _AdminSubLevelScreenState extends State<AdminSubLevelScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override

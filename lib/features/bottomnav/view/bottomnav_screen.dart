@@ -1,9 +1,7 @@
 import 'package:codeup/features/auth/view/certificates_screen.dart';
 import 'package:codeup/features/auth/view/freelance_screen.dart';
-import 'package:codeup/features/auth/view/level_screen.dart';
-import 'package:codeup/features/auth/view/profile_screen.dart';
+import 'package:codeup/features/levels/level_screen.dart';
 import 'package:codeup/features/auth/view/settings_screen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../home/view/home_screen.dart';
@@ -17,13 +15,28 @@ class BottomnavScreen extends StatefulWidget {
 
 class _BottomnavScreenState extends State<BottomnavScreen> {
   int selectedindex = 0;
-  List pages = [
-    HomeScreen(),
-    LevelScreen(),
+  List pages =[];
+  @override
+  void initState() {
+     pages = [
+    HomeScreen(onnavigateCerti: () {
+      selectedindex = 2;
+      setState(() {
+        
+      });
+    },onnavigateLevels: () {
+      selectedindex = 1;
+      setState(() {
+        
+      });
+    },),
+    UserLevelScreen(),
     CertificatesScreen(),
     FreelanceScreen(),
     SettingsScreen(),
   ];
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

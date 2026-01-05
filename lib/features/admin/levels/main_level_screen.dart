@@ -79,7 +79,7 @@ class _MainLevelScreenState extends State<MainLevelScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SubLevelScreen(
+                      builder: (context) => AdminSubLevelScreen(
                         mainLevelId: doc.id,
                         mainLevelName: levelName,
                       ),

@@ -425,6 +425,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
       final newQuestion = QuestionModel(
         id: widget.question?.id ?? '',
         question: _questionController.text.trim(),
+        order: 0,
+        subLevelId: '',
         options: [
           _option1Controller.text.trim(),
           _option2Controller.text.trim(),
