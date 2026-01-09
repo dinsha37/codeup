@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:codeup/features/admin/levels/main_level_screen.dart';
 import 'package:codeup/features/admin/question/admin_defaultques_screen.dart';
 import 'package:codeup/features/auth/view/login_screen.dart';
+import 'package:codeup/features/freelance/view/admin_freelancereview_screen.dart';
+import 'package:codeup/features/freelance/view/admin_freenlancemanage_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -250,6 +252,76 @@ class _AdminDashboardState extends State<AdminDashboard> {
               children: [
                 Text(
                   'Create Level',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 10),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (context) => AdminFreelanceManagementScreen()),
+            );
+          },
+
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Freelance Manage',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 10),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (context) => AdminApplicationsReviewScreen()),
+            );
+          },
+
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Freelance Requests',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded),

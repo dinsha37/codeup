@@ -1,5 +1,5 @@
 import 'package:codeup/features/auth/view/certificates_screen.dart';
-import 'package:codeup/features/auth/view/freelance_screen.dart';
+import 'package:codeup/features/freelance/view/freelance_screen.dart';
 import 'package:codeup/features/levels/level_screen.dart';
 import 'package:codeup/features/auth/view/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +32,7 @@ class _BottomnavScreenState extends State<BottomnavScreen> {
     },),
     UserLevelScreen(),
     CertificatesScreen(),
-    FreelanceScreen(),
+    UserFreelanceListingScreen(),
     SettingsScreen(),
   ];
     super.initState();

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
+
+import '../../../utils/variables/global_variables.dart';
+import '../../levels/model/mainlevel_model.dart';
+
 
 // ============================================================================
 // CERTIFICATES SCREEN - Main Entry Point
@@ -13,18 +18,25 @@ class CertificatesScreen extends StatefulWidget {
 
 class _CertificatesScreenState extends State<CertificatesScreen>
     with SingleTickerProviderStateMixin {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
   // Certificate categories
   int selectedCategory = 0;
-  final List<String> categories = ['All', 'Master', 'Advanced', 'Basic'];
+  List<String> categories = ['All'];
+  List<String> categoryIds = ['all']; // To store mainLevelIds
+
+  List<_Certificate> _certificates = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _setupAnimations();
+    _loadCategoriesAndCertificates();
   }
 
   @override
@@ -55,6 +67,142 @@ class _CertificatesScreenState extends State<CertificatesScreen>
     _animationController.forward();
   }
 
+  Future<void> _loadCategoriesAndCertificates() async {
+    try {
+      final userId = globalUser?.uid;
+      if (userId == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Get all main levels to populate categories
+      final mainLevelsSnapshot = await _db
+          .collection('mainLevels')
+          .orderBy('order')
+          .get();
+      
+      final Map<String, MainLevel> mainLevelsMap = {};
+      final List<String> categoryNames = ['All'];
+      final List<String> categoryMainLevelIds = ['all'];
+      
+      for (var doc in mainLevelsSnapshot.docs) {
+        final mainLevel = MainLevel.fromFirestore(doc);
+        mainLevelsMap[doc.id] = mainLevel;
+        categoryNames.add(mainLevel.name);
+        categoryMainLevelIds.add(doc.id);
+      }
+
+      // Get user's completed sublevels
+      final userDoc = await _db.collection('userStatus').doc(userId).get();
+      final completedSubLevels =
+          List<String>.from(userDoc.data()?['completedSubLevels'] ?? []);
+
+      // Get all certificates for the user
+      final certificatesSnapshot = await _db
+          .collection('userStatus')
+          .doc(userId)
+          .collection('certificates')
+          .orderBy('issuedAt', descending: true)
+          .get();
+
+      // Build certificate list - only for completed main levels
+      final certificates = <_Certificate>[];
+      
+      for (var certDoc in certificatesSnapshot.docs) {
+        final data = certDoc.data();
+        final mainLevelId = data['mainLevelId'] as String?;
+        final issuedAt = data['issuedAt'] as Timestamp?;
+
+        if (mainLevelId != null && mainLevelsMap.containsKey(mainLevelId)) {
+          final mainLevel = mainLevelsMap[mainLevelId]!;
+          
+          // Get all sublevels for this main level
+          final subLevelsDocs = await _db
+              .collection('subLevels')
+              .where('mainLevelId', isEqualTo: mainLevelId)
+              .get();
+          
+          final totalSubLevels = subLevelsDocs.docs.length;
+          final mainLevelSubLevelIds =
+              subLevelsDocs.docs.map((doc) => doc.id).toList();
+          
+          // Count how many are completed
+          final completedCount = mainLevelSubLevelIds
+              .where((id) => completedSubLevels.contains(id))
+              .length;
+
+          // Only add certificate if ALL sublevels are completed
+          if (totalSubLevels > 0 && completedCount == totalSubLevels) {
+            certificates.add(_Certificate(
+              title: '${mainLevel.name} Master',
+              subtitle: 'Completed all ${mainLevel.name} levels',
+              issueDate: _formatDate(issuedAt),
+              icon: _getIconForLevel(mainLevel.name),
+              gradientColors: mainLevel.gradientColors,
+              isMaster: true,
+              level: _getLevelCategory(mainLevel.name),
+              achievements: '$completedCount levels completed',
+              mainLevelId: mainLevelId,
+              mainLevelName: mainLevel.name,
+            ));
+          }
+        }
+      }
+
+      setState(() {
+        categories = categoryNames;
+        categoryIds = categoryMainLevelIds;
+        _certificates = certificates;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading certificates: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  String _formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return 'Unknown Date';
+    final date = timestamp.toDate();
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  IconData _getIconForLevel(String levelName) {
+    final lowerName = levelName.toLowerCase();
+    if (lowerName.contains('python')) return Icons.code;
+    if (lowerName.contains('javascript') || lowerName.contains('js')) {
+      return Icons.javascript;
+    }
+    if (lowerName.contains('algorithm')) return Icons.psychology;
+    if (lowerName.contains('web') || lowerName.contains('full stack')) {
+      return Icons.web;
+    }
+    if (lowerName.contains('data')) return Icons.storage;
+    return Icons.emoji_events;
+  }
+
+  String _getLevelCategory(String levelName) {
+    final lowerName = levelName.toLowerCase();
+    if (lowerName.contains('master') || lowerName.contains('expert')) {
+      return 'Master';
+    }
+    if (lowerName.contains('advanced')) return 'Advanced';
+    return 'Basic';
+  }
+
+  int _getMasterCount() =>
+      _certificates.where((c) => c.level == 'Master').length;
+  
+  int _getAdvancedCount() =>
+      _certificates.where((c) => c.level == 'Advanced').length;
+  
+  int _getBasicCount() =>
+      _certificates.where((c) => c.level == 'Basic').length;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,20 +216,23 @@ class _CertificatesScreenState extends State<CertificatesScreen>
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(context),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildContent(),
-                  ),
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white))
+              : Column(
+                  children: [
+                    _buildHeader(context),
+                    Expanded(
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: _buildContent(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -106,10 +257,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.white),
-                onPressed: () => _showShareDialog(context),
-              ),
+              
             ],
           ),
           const SizedBox(height: 20),
@@ -124,11 +272,11 @@ class _CertificatesScreenState extends State<CertificatesScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildStatBox('5', 'Total', Icons.emoji_events),
+        _buildStatBox('${_certificates.length}', 'Total', Icons.emoji_events),
         Container(width: 1, height: 40, color: Colors.white30),
-        _buildStatBox('2', 'Master', Icons.stars),
+        _buildStatBox('${_getMasterCount()}', 'Master', Icons.stars),
         Container(width: 1, height: 40, color: Colors.white30),
-        _buildStatBox('3', 'Advanced', Icons.trending_up),
+        _buildStatBox('${_getAdvancedCount()}', 'Advanced', Icons.trending_up),
       ],
     );
   }
@@ -222,7 +370,40 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
   // List of all certificates
   Widget _buildCertificatesList() {
-    final certificates = _getCertificates();
+    final certificates = _getFilteredCertificates();
+
+    if (certificates.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.card_giftcard_outlined,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Certificates Yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete all levels in a main level\nto earn a certificate!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -232,6 +413,20 @@ class _CertificatesScreenState extends State<CertificatesScreen>
         return _buildCertificateCard(cert, index);
       },
     );
+  }
+
+  // Get filtered certificates based on category
+  List<_Certificate> _getFilteredCertificates() {
+    // If "All" is selected (index 0)
+    if (selectedCategory == 0) return _certificates;
+    
+    // Get the mainLevelId for the selected category
+    final selectedMainLevelId = categoryIds[selectedCategory];
+    
+    // Filter certificates by mainLevelId
+    return _certificates
+        .where((c) => c.mainLevelId == selectedMainLevelId)
+        .toList();
   }
 
   // Individual certificate card
@@ -261,7 +456,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: cert.gradientColors[0].withValues(alpha:0.3),
+                  color: cert.gradientColors[0].withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -289,7 +484,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha:0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -406,71 +601,6 @@ class _CertificatesScreenState extends State<CertificatesScreen>
         ),
       ),
     );
-  }
-
-  // Get certificates list
-  List<_Certificate> _getCertificates() {
-    final allCerts = [
-      _Certificate(
-        title: 'Master Coder Elite',
-        subtitle: 'Completed 100+ Advanced Challenges',
-        issueDate: 'Dec 15, 2024',
-        icon: Icons.emoji_events,
-        gradientColors: const [Color(0xFFFFD700), Color(0xFFFF8C00)],
-        isMaster: true,
-        level: 'Master',
-        achievements: '150 challenges • 5000 XP',
-      ),
-      _Certificate(
-        title: 'Algorithm Master',
-        subtitle: 'Expert in Data Structures & Algorithms',
-        issueDate: 'Nov 28, 2024',
-        icon: Icons.psychology,
-        gradientColors: const [Color(0xFF8B5CF6), Color(0xFF6366F1)],
-        isMaster: true,
-        level: 'Master',
-        achievements: '75 algorithms mastered',
-      ),
-      _Certificate(
-        title: 'Full Stack Developer',
-        subtitle: 'Frontend & Backend Mastery',
-        issueDate: 'Oct 10, 2024',
-        icon: Icons.web,
-        gradientColors: const [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
-        isMaster: false,
-        level: 'Advanced',
-        achievements: '50 projects completed',
-      ),
-      _Certificate(
-        title: 'Python Expert',
-        subtitle: 'Advanced Python Programming',
-        issueDate: 'Sept 22, 2024',
-        icon: Icons.code,
-        gradientColors: const [Color(0xFF10B981), Color(0xFF059669)],
-        isMaster: false,
-        level: 'Advanced',
-        achievements: '60 Python challenges',
-      ),
-      _Certificate(
-        title: 'JavaScript Fundamentals',
-        subtitle: 'Core JavaScript Concepts',
-        issueDate: 'Aug 15, 2024',
-        icon: Icons.javascript,
-        gradientColors: const [Color(0xFFF59E0B), Color(0xFFEF4444)],
-        isMaster: false,
-        level: 'Basic',
-        achievements: '30 challenges completed',
-      ),
-    ];
-
-    if (selectedCategory == 0) return allCerts;
-    if (selectedCategory == 1) {
-      return allCerts.where((c) => c.level == 'Master').toList();
-    }
-    if (selectedCategory == 2) {
-      return allCerts.where((c) => c.level == 'Advanced').toList();
-    }
-    return allCerts.where((c) => c.level == 'Basic').toList();
   }
 
   // Show certificate detail dialog
@@ -671,7 +801,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 28),
@@ -696,6 +826,8 @@ class _Certificate {
   final bool isMaster;
   final String level;
   final String achievements;
+  final String mainLevelId;
+  final String mainLevelName;
 
   _Certificate({
     required this.title,
@@ -706,5 +838,7 @@ class _Certificate {
     required this.isMaster,
     required this.level,
     required this.achievements,
+    required this.mainLevelId,
+    required this.mainLevelName,
   });
 }
