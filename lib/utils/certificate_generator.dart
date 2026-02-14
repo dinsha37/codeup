@@ -117,7 +117,7 @@ class CertificateGenerator {
                                 style: pw.TextStyle(
                                   font: fontBold,
                                   fontSize: 36,
-                                  color: PdfColors.black,
+                                  color: PdfColor.fromHex('#2C5F5D'),
                                   letterSpacing: 2,
                                 ),
                               ),
@@ -127,7 +127,7 @@ class CertificateGenerator {
                                 style: pw.TextStyle(
                                   font: font,
                                   fontSize: 11,
-                                  color: PdfColors.black,
+                                  color: PdfColors.grey600,
                                   letterSpacing: 1.5,
                                 ),
                               ),
@@ -143,7 +143,7 @@ class CertificateGenerator {
                         style: pw.TextStyle(
                           font: elegantFont,
                           fontSize: 42,
-                          color: PdfColors.black,
+                          color: PdfColor.fromHex('#2C5F5D'),
                           letterSpacing: 2,
                         ),
                       ),
@@ -175,7 +175,7 @@ class CertificateGenerator {
                         style: pw.TextStyle(
                           font: font,
                           fontSize: 16,
-                          color: PdfColors.black,
+                          color: PdfColors.grey700,
                         ),
                       ),
 
@@ -191,14 +191,14 @@ class CertificateGenerator {
                               style: pw.TextStyle(
                                 font: titleFont,
                                 fontSize: 56,
-                                color: PdfColors.black,
+                                color: PdfColor.fromHex('#2C5F5D'),
                               ),
                             ),
                             pw.SizedBox(height: 8),
                             pw.Container(
                               width: 350,
                               height: 1.5,
-                              color: PdfColors.black,
+                              color: PdfColor.fromHex('#2C5F5D'),
                             ),
                           ],
                         ),
@@ -212,7 +212,7 @@ class CertificateGenerator {
                         style: pw.TextStyle(
                           font: font,
                           fontSize: 16,
-                          color: PdfColors.black,
+                          color: PdfColors.grey700,
                         ),
                       ),
 
@@ -237,7 +237,7 @@ class CertificateGenerator {
                           style: pw.TextStyle(
                             font: fontBold,
                             fontSize: 26,
-                            color: PdfColors.black,
+                            color: PdfColor.fromHex('#2C5F5D'),
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -297,7 +297,7 @@ class CertificateGenerator {
                           style: pw.TextStyle(
                             font: font,
                             fontSize: 13,
-                            color: PdfColors.black,
+                            color: PdfColors.grey700,
                             lineSpacing: 3,
                           ),
                         ),
@@ -318,7 +318,7 @@ class CertificateGenerator {
                               children: [
                                 pw.Container(
                                   height: 1.5,
-                                  color: PdfColors.black,
+                                  color: PdfColor.fromHex('#2C5F5D'),
                                 ),
                                 pw.SizedBox(height: 6),
                                 pw.Text(
@@ -326,7 +326,7 @@ class CertificateGenerator {
                                   style: pw.TextStyle(
                                     font: font,
                                     fontSize: 10,
-                                    color: PdfColors.black,
+                                    color: PdfColors.grey600,
                                   ),
                                 ),
                                 pw.SizedBox(height: 3),
@@ -335,7 +335,7 @@ class CertificateGenerator {
                                   style: pw.TextStyle(
                                     font: fontBold,
                                     fontSize: 12,
-                                    color: PdfColors.black,
+                                    color: PdfColors.grey800,
                                   ),
                                 ),
                               ],
@@ -372,13 +372,13 @@ class CertificateGenerator {
                                         style: pw.TextStyle(
                                           font: fontBold,
                                           fontSize: 12,
-                                          color: PdfColors.black,
+                                          color: PdfColor.fromHex('#2C5F5D'),
                                         ),
                                       ),
                                       pw.Container(
                                         width: 35,
                                         height: 1,
-                                        color: PdfColors.black,
+                                        color: PdfColor.fromHex('#5A9A97'),
                                       ),
                                       pw.SizedBox(height: 2),
                                       pw.Text(
@@ -386,7 +386,7 @@ class CertificateGenerator {
                                         style: pw.TextStyle(
                                           font: font,
                                           fontSize: 7,
-                                          color: PdfColors.black,
+                                          color: PdfColors.grey700,
                                           letterSpacing: 1,
                                         ),
                                       ),
@@ -400,7 +400,7 @@ class CertificateGenerator {
                                 style: pw.TextStyle(
                                   font: font,
                                   fontSize: 9,
-                                  color: PdfColors.black,
+                                  color: PdfColors.grey600,
                                 ),
                               ),
                             ],
@@ -414,7 +414,7 @@ class CertificateGenerator {
                               children: [
                                 pw.Container(
                                   height: 1.5,
-                                  color: PdfColors.black,
+                                  color: PdfColor.fromHex('#2C5F5D'),
                                 ),
                                 pw.SizedBox(height: 6),
                                 pw.Text(
@@ -422,7 +422,7 @@ class CertificateGenerator {
                                   style: pw.TextStyle(
                                     font: font,
                                     fontSize: 10,
-                                    color: PdfColors.black,
+                                    color: PdfColors.grey600,
                                   ),
                                 ),
                                 pw.SizedBox(height: 3),
@@ -431,7 +431,7 @@ class CertificateGenerator {
                                   style: pw.TextStyle(
                                     font: fontBold,
                                     fontSize: 11,
-                                    color: PdfColors.black,
+                                    color: PdfColors.grey800,
                                   ),
                                 ),
                               ],
@@ -448,7 +448,7 @@ class CertificateGenerator {
                         style: pw.TextStyle(
                           font: font,
                           fontSize: 8,
-                          color: PdfColors.black,
+                          color: PdfColors.grey500,
                         ),
                       ),
                     ],
