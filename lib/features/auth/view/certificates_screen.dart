@@ -1,6 +1,8 @@
+import 'package:codeup/utils/certificate_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
+import 'package:printing/printing.dart';
 
 import '../../../utils/variables/global_variables.dart';
 import '../../levels/model/mainlevel_model.dart';
@@ -660,6 +662,21 @@ class _CertificatesScreenState extends State<CertificatesScreen>
                 ),
               ),
               const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _viewCertificate(cert),
+                  icon: const Icon(Icons.visibility, size: 18),
+                  label: const Text('View Certificate'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -719,23 +736,47 @@ class _CertificatesScreenState extends State<CertificatesScreen>
   }
 
   // Download certificate action
-  void _downloadCertificate(_Certificate cert) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.download, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text('Downloading "${cert.title}" certificate...')),
-          ],
-        ),
-        backgroundColor: const Color(0xFF667EEA),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'View',
-          textColor: Colors.white,
-          onPressed: () {},
+  Future<void> _downloadCertificate(_Certificate cert) async {
+    try {
+      final pdfBytes = await CertificateGenerator.generateCertificate(
+        recipientName: globalUser?.name ?? 'Valued Student',
+        courseName: cert.title,
+        date: cert.issueDate,
+        isMaster: cert.isMaster,
+        achievements: cert.achievements,
+      );
+
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: '${cert.title.replaceAll(' ', '_')}_Certificate.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating certificate: $e')),
+        );
+      }
+    }
+  }
+
+  // View certificate action
+  void _viewCertificate(_Certificate cert) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(cert.title)),
+          body: PdfPreview(
+            build: (format) => CertificateGenerator.generateCertificate(
+              recipientName: globalUser?.name ?? 'Valued Student',
+              courseName: cert.title,
+              date: cert.issueDate,
+              isMaster: cert.isMaster,
+              achievements: cert.achievements,
+            ),
+            canChangeOrientation: false,
+            canChangePageFormat: false,
+          ),
         ),
       ),
     );
