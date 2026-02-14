@@ -2,11 +2,11 @@ import 'package:codeup/utils/certificate_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math' as math;
+import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
 import '../../../utils/variables/global_variables.dart';
 import '../../levels/model/mainlevel_model.dart';
-
 
 // ============================================================================
 // CERTIFICATES SCREEN - Main Entry Point
@@ -21,7 +21,7 @@ class CertificatesScreen extends StatefulWidget {
 class _CertificatesScreenState extends State<CertificatesScreen>
     with SingleTickerProviderStateMixin {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -82,11 +82,11 @@ class _CertificatesScreenState extends State<CertificatesScreen>
           .collection('mainLevels')
           .orderBy('order')
           .get();
-      
+
       final Map<String, MainLevel> mainLevelsMap = {};
       final List<String> categoryNames = ['All'];
       final List<String> categoryMainLevelIds = ['all'];
-      
+
       for (var doc in mainLevelsSnapshot.docs) {
         final mainLevel = MainLevel.fromFirestore(doc);
         mainLevelsMap[doc.id] = mainLevel;
@@ -96,8 +96,9 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
       // Get user's completed sublevels
       final userDoc = await _db.collection('userStatus').doc(userId).get();
-      final completedSubLevels =
-          List<String>.from(userDoc.data()?['completedSubLevels'] ?? []);
+      final completedSubLevels = List<String>.from(
+        userDoc.data()?['completedSubLevels'] ?? [],
+      );
 
       // Get all certificates for the user
       final certificatesSnapshot = await _db
@@ -109,7 +110,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
       // Build certificate list - only for completed main levels
       final certificates = <_Certificate>[];
-      
+
       for (var certDoc in certificatesSnapshot.docs) {
         final data = certDoc.data();
         final mainLevelId = data['mainLevelId'] as String?;
@@ -117,17 +118,18 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
         if (mainLevelId != null && mainLevelsMap.containsKey(mainLevelId)) {
           final mainLevel = mainLevelsMap[mainLevelId]!;
-          
+
           // Get all sublevels for this main level
           final subLevelsDocs = await _db
               .collection('subLevels')
               .where('mainLevelId', isEqualTo: mainLevelId)
               .get();
-          
+
           final totalSubLevels = subLevelsDocs.docs.length;
-          final mainLevelSubLevelIds =
-              subLevelsDocs.docs.map((doc) => doc.id).toList();
-          
+          final mainLevelSubLevelIds = subLevelsDocs.docs
+              .map((doc) => doc.id)
+              .toList();
+
           // Count how many are completed
           final completedCount = mainLevelSubLevelIds
               .where((id) => completedSubLevels.contains(id))
@@ -135,18 +137,20 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
           // Only add certificate if ALL sublevels are completed
           if (totalSubLevels > 0 && completedCount == totalSubLevels) {
-            certificates.add(_Certificate(
-              title: '${mainLevel.name} Master',
-              subtitle: 'Completed all ${mainLevel.name} levels',
-              issueDate: _formatDate(issuedAt),
-              icon: _getIconForLevel(mainLevel.name),
-              gradientColors: mainLevel.gradientColors,
-              isMaster: true,
-              level: _getLevelCategory(mainLevel.name),
-              achievements: '$completedCount levels completed',
-              mainLevelId: mainLevelId,
-              mainLevelName: mainLevel.name,
-            ));
+            certificates.add(
+              _Certificate(
+                title: '${mainLevel.name} Master',
+                subtitle: 'Completed all ${mainLevel.name} levels',
+                issueDate: _formatDate(issuedAt),
+                icon: _getIconForLevel(mainLevel.name),
+                gradientColors: mainLevel.gradientColors,
+                isMaster: true,
+                level: _getLevelCategory(mainLevel.name),
+                achievements: '$completedCount levels completed',
+                mainLevelId: mainLevelId,
+                mainLevelName: mainLevel.name,
+              ),
+            );
           }
         }
       }
@@ -167,8 +171,18 @@ class _CertificatesScreenState extends State<CertificatesScreen>
     if (timestamp == null) return 'Unknown Date';
     final date = timestamp.toDate();
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -198,12 +212,11 @@ class _CertificatesScreenState extends State<CertificatesScreen>
 
   int _getMasterCount() =>
       _certificates.where((c) => c.level == 'Master').length;
-  
+
   int _getAdvancedCount() =>
       _certificates.where((c) => c.level == 'Advanced').length;
-  
-  int _getBasicCount() =>
-      _certificates.where((c) => c.level == 'Basic').length;
+
+  int _getBasicCount() => _certificates.where((c) => c.level == 'Basic').length;
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +233,8 @@ class _CertificatesScreenState extends State<CertificatesScreen>
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
               : Column(
                   children: [
                     _buildHeader(context),
@@ -259,7 +273,6 @@ class _CertificatesScreenState extends State<CertificatesScreen>
                   ),
                 ),
               ),
-              
             ],
           ),
           const SizedBox(height: 20),
@@ -397,10 +410,7 @@ class _CertificatesScreenState extends State<CertificatesScreen>
             Text(
               'Complete all levels in a main level\nto earn a certificate!',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -421,10 +431,10 @@ class _CertificatesScreenState extends State<CertificatesScreen>
   List<_Certificate> _getFilteredCertificates() {
     // If "All" is selected (index 0)
     if (selectedCategory == 0) return _certificates;
-    
+
     // Get the mainLevelId for the selected category
     final selectedMainLevelId = categoryIds[selectedCategory];
-    
+
     // Filter certificates by mainLevelId
     return _certificates
         .where((c) => c.mainLevelId == selectedMainLevelId)
@@ -738,12 +748,17 @@ class _CertificatesScreenState extends State<CertificatesScreen>
   // Download certificate action
   Future<void> _downloadCertificate(_Certificate cert) async {
     try {
+      final byteData = await rootBundle.load('assets/images/codeup.png');
+      final logoBytes = byteData.buffer.asUint8List();
+
       final pdfBytes = await CertificateGenerator.generateCertificate(
         recipientName: globalUser?.name ?? 'Valued Student',
         courseName: cert.title,
         date: cert.issueDate,
         isMaster: cert.isMaster,
+        levelName: cert.level,
         achievements: cert.achievements,
+        logoBytes: logoBytes,
       );
 
       await Printing.sharePdf(
@@ -767,13 +782,22 @@ class _CertificatesScreenState extends State<CertificatesScreen>
         builder: (context) => Scaffold(
           appBar: AppBar(title: Text(cert.title)),
           body: PdfPreview(
-            build: (format) => CertificateGenerator.generateCertificate(
-              recipientName: globalUser?.name ?? 'Valued Student',
-              courseName: cert.title,
-              date: cert.issueDate,
-              isMaster: cert.isMaster,
-              achievements: cert.achievements,
-            ),
+            build: (format) async {
+              final byteData = await rootBundle.load(
+                'assets/images/codeup.png',
+              );
+              final logoBytes = byteData.buffer.asUint8List();
+
+              return CertificateGenerator.generateCertificate(
+                recipientName: globalUser?.name ?? 'Valued Student',
+                courseName: cert.title,
+                date: cert.issueDate,
+                isMaster: cert.isMaster,
+                levelName: cert.level,
+                achievements: cert.achievements,
+                logoBytes: logoBytes,
+              );
+            },
             canChangeOrientation: false,
             canChangePageFormat: false,
           ),
