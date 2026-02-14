@@ -14,14 +14,14 @@ class HomeScreen extends StatefulWidget {
   HomeScreen({super.key, this.onnavigateCerti, this.onnavigateLevels});
   VoidCallback? onnavigateCerti;
   VoidCallback? onnavigateLevels;
-  
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  
+
   late String userName;
   late String userLevel;
   late int currentXP;
@@ -61,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-    );
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -73,63 +73,65 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (globalUser != null) {
       userName = globalUser?.name ?? '';
-      
+
       // Get initial score from userStartStage
       int initialScore = globalUser!.userStartStage ?? 0;
-      
+
       // Fetch user progress from Firestore
       try {
         final userId = globalUser?.uid;
         if (userId != null) {
           // Get completed sublevels
-          final userStatusDoc = await _db.collection('userStatus').doc(userId).get();
+          final userStatusDoc = await _db
+              .collection('userStatus')
+              .doc(userId)
+              .get();
           final completedSubLevels = List<String>.from(
-            userStatusDoc.data()?['completedSubLevels'] ?? []
+            userStatusDoc.data()?['completedSubLevels'] ?? [],
           );
-          
+
           // Get quiz attempts
           final quizAttemptsSnapshot = await _db
               .collection('userStatus')
               .doc(userId)
               .collection('quizAttempts')
               .get();
-          
+
           totalQuizAttempts = quizAttemptsSnapshot.docs.length;
-          
+
           // Calculate quiz statistics
           int totalScore = 0;
           int passedCount = 0;
-          
+
           for (var doc in quizAttemptsSnapshot.docs) {
             final data = doc.data();
             final score = data['score'] ?? 0;
             final isPassed = data['isPassed'] ?? false;
-            
+
             totalScore += score as int;
             if (isPassed) passedCount++;
           }
-          
+
           passedQuizzes = passedCount;
-          averageScore = totalQuizAttempts > 0 
-              ? (totalScore / totalQuizAttempts) 
+          averageScore = totalQuizAttempts > 0
+              ? (totalScore / totalQuizAttempts)
               : 0.0;
-          
+
           // Calculate XP based on completed sublevels
           completedChallenges = completedSubLevels.length;
-          
+
           // Each completed sublevel gives XP
           int earnedXP = completedSubLevels.length * 10;
-          
+
           // Combine with initial score for total progress
           int totalProgress = initialScore + completedSubLevels.length;
-          
+
           // Calculate level based on total progress
           userLevel = _calculateUserLevel(totalProgress);
-          
+
           // Calculate XP within current level (0-100)
           currentXP = (earnedXP % 100);
           totalXP = 100;
-          
         } else {
           _setDefaultValues();
         }
@@ -140,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       _setDefaultValues();
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -342,7 +344,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double progress = currentXP / totalXP;
     final levelGradient = _getLevelGradient(userLevel);
     final levelIcon = _getLevelIcon(userLevel);
-    final hasStarted = globalUser?.userStartStage != null && globalUser!.userStartStage! > 0;
+    final hasStarted =
+        globalUser?.userStartStage != null && globalUser!.userStartStage! > 0;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -386,11 +389,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          levelIcon,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        Icon(levelIcon, color: Colors.white, size: 16),
                         const SizedBox(width: 6),
                         Text(
                           userLevel,
@@ -435,11 +434,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 '$currentXP / $totalXP XP',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color.lerp(
-                    levelGradient[0],
-                    levelGradient[1],
-                    0.5,
-                  ),
+                  color: Color.lerp(levelGradient[0], levelGradient[1], 0.5),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -489,11 +484,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.blue.shade700,
-                  size: 20,
-                ),
+                Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -533,11 +524,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.quiz,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    Icon(Icons.quiz, color: Colors.white, size: 20),
                     SizedBox(width: 8),
                     Text(
                       'Attend Starting Quiz',
@@ -774,17 +761,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
           ),
         ),
-        _buildFeatureCard(
-          context: context,
-          icon: Icons.code,
-          label: 'Coding Focus',
-          subtitle: 'Practice mode',
-          gradient: const [Color(0xFF43e97b), Color(0xFF38f9d7)],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CodingfocusScreen()),
-          ),
-        ),
+        // _buildFeatureCard(
+        //   context: context,
+        //   icon: Icons.code,
+        //   label: 'Coding Focus',
+        //   subtitle: 'Practice mode',
+        //   gradient: const [Color(0xFF43e97b), Color(0xFF38f9d7)],
+        //   onTap: () => Navigator.push(
+        //     context,
+        //     MaterialPageRoute(builder: (context) => const CodingfocusScreen()),
+        //   ),
+        // ),
       ],
     );
   }
